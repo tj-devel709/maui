@@ -2,6 +2,7 @@
 using System.Linq;
 using ObjCRuntime;
 using UIKit;
+using Microsoft.Maui.Graphics;
 
 namespace Microsoft.Maui.Platform
 {
@@ -17,17 +18,19 @@ namespace Microsoft.Maui.Platform
 			if (view == null)
 				return;
 
-			if (view.TrackColor != null)
-				uiSwitch.OnTintColor = view.TrackColor.ToPlatform();
-
 			UIView uIView;
 			if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsTvOSVersionAtLeast(13))
 				uIView = uiSwitch.Subviews[0].Subviews[0];
 			else
 				uIView = uiSwitch.Subviews[0].Subviews[0].Subviews[0];
 
-			if (view.TrackColor != null)
+			if (!view.IsOn)
+				uIView.BackgroundColor = uiSwitch.GetOffTrackColor ();
+
+			else if (view.TrackColor is not null) {
+				uiSwitch.OnTintColor = view.TrackColor.ToPlatform ();
 				uIView.BackgroundColor = uiSwitch.OnTintColor;
+			}
 		}
 
 		public static void UpdateThumbColor(this UISwitch uiSwitch, ISwitch view)
@@ -51,9 +54,6 @@ namespace Microsoft.Maui.Platform
 			return uIView;
 		}
 
-		internal static UIColor? GetOffTrackColor(this UISwitch uISwitch)
-		{
-			return uISwitch.GetTrackSubview().BackgroundColor;
-		}
+		internal static UIColor GetOffTrackColor(this UISwitch uISwitch) => UIColor.FromRGB (230, 230, 232);
 	}
 }
