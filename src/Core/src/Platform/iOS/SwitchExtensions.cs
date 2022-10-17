@@ -8,6 +8,9 @@ namespace Microsoft.Maui.Platform
 {
 	public static class SwitchExtensions
 	{
+		static UIColor? OffTrackColor;
+		static bool HasSwitched;
+
 		public static void UpdateIsOn(this UISwitch uiSwitch, ISwitch view)
 		{
 			uiSwitch.SetState(view.IsOn, true);
@@ -18,18 +21,25 @@ namespace Microsoft.Maui.Platform
 			if (view == null)
 				return;
 
-			UIView uIView;
-			if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsTvOSVersionAtLeast(13))
-				uIView = uiSwitch.Subviews[0].Subviews[0];
-			else
-				uIView = uiSwitch.Subviews[0].Subviews[0].Subviews[0];
+			UpdateOffTrackColor(uiSwitch);
+
+			var uIView = GetTrackSubview(uiSwitch);
 
 			if (!view.IsOn)
-				uIView.BackgroundColor = uiSwitch.GetOffTrackColor ();
+				uIView.BackgroundColor = OffTrackColor;
 
 			else if (view.TrackColor is not null) {
 				uiSwitch.OnTintColor = view.TrackColor.ToPlatform ();
 				uIView.BackgroundColor = uiSwitch.OnTintColor;
+			}
+		}
+
+		static void UpdateOffTrackColor (UISwitch uiSwitch)
+		{
+			if (!HasSwitched)
+			{
+				OffTrackColor = uiSwitch.GetOffTrackColor();
+				HasSwitched = true;
 			}
 		}
 
@@ -45,15 +55,15 @@ namespace Microsoft.Maui.Platform
 
 		internal static UIView GetTrackSubview(this UISwitch uISwitch)
 		{
-			UIView uIView;
 			if (OperatingSystem.IsIOSVersionAtLeast(13) || OperatingSystem.IsTvOSVersionAtLeast(13))
-				uIView = uISwitch.Subviews[0].Subviews[0];
+				return uISwitch.Subviews[0].Subviews[0];
 			else
-				uIView = uISwitch.Subviews[0].Subviews[0].Subviews[0];
-
-			return uIView;
+				return uISwitch.Subviews[0].Subviews[0].Subviews[0];
 		}
 
-		internal static UIColor GetOffTrackColor(this UISwitch uISwitch) => UIColor.FromRGB (230, 230, 232);
+		internal static UIColor? GetOffTrackColor(this UISwitch uISwitch)
+		{
+			return uISwitch.GetTrackSubview().BackgroundColor;
+		}
 	}
 }
