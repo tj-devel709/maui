@@ -38,9 +38,9 @@ internal static class KeyboardAutoManagerScroll
 	static UIEdgeInsets uIEdgeInsets = new UIEdgeInsets ();
 	static bool LayoutifNeededOnUpdate = false;
 	static CGPoint TopViewBeginOrigin = new CGPoint (nfloat.MaxValue, nfloat.MaxValue);
+	static CGPoint InvalidPoint = new CGPoint (nfloat.MaxValue, nfloat.MaxValue);
 
 	static NSObject? WillShowToken = null;
-	//static NSObject? DidShowToken = null;
 	static NSObject? DidHideToken = null;
 	static NSObject? TextFieldToken = null;
 	static NSObject? TextViewToken = null;
@@ -50,185 +50,209 @@ internal static class KeyboardAutoManagerScroll
 	static UIView? rootController = null;
 
 
-
-
+	// Set up the observers for the keyboard and the UITextField/UITextView
 	internal static void Init()
 	{
-		//DidShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardDidShowNotification"), (notification) =>
+		//TextFieldToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UITextFieldTextDidBeginEditingNotification"), (notification) =>
 		//{
+		//	if (notification.Object is not null)
+		//	{
+		//		view = (UIView)notification.Object;
+		//		rootController = view.GetViewController()?.GetContainerViewController();
+		//	}
 		//});
 
-		//  UITextFieldTextDidBeginEditingNotification, UITextViewTextDidBeginEditingNotification
-		TextFieldToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UITextFieldTextDidBeginEditingNotification"), (notification) =>
-		{
-			if (notification.Object is not null)
-			{
-				view = (UIView)notification.Object;
-				rootController = view.GetViewController()?.GetContainerViewController();
-			}
-		});
-		TextViewToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UITextViewTextDidBeginEditingNotification"), (notification) =>
-		{
-			if (notification.Object is not null)
-			{
-				view = (UIView)notification.Object;
-				rootController = view.GetViewController()?.GetContainerViewController();
-			}
-		});
+		//TextViewToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UITextViewTextDidBeginEditingNotification"), (notification) =>
+		//{
+		//	if (notification.Object is not null)
+		//	{
+		//		view = (UIView)notification.Object;
+		//		rootController = view.GetViewController()?.GetContainerViewController();
+		//	}
+		//});
+
+		//WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString ("UIKeyboardWillShowNotification"), (notification) =>
+		//{
+		//	NSObject? frameSize = null;
+		//	NSObject? curveSize = null;
+
+		//	var foundFrameSize = notification.UserInfo?.TryGetValue(new NSString ("UIKeyboardFrameEndUserInfoKey"), out frameSize);
+		//	if (foundFrameSize == true && frameSize is not null)
+		//	{
+		//		var frameSizeRect = DescriptionToCGRect(frameSize.Description);
+		//		if (frameSizeRect is not null)
+		//			KeyboardFrame = (CGRect)frameSizeRect;
+		//	}
+
+		//	//var foundCurve = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardAnimationCurveUserInfoKey"), out curveSize);
+		//	var foundAnimationDuration = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardAnimationDurationUserInfoKey"), out curveSize);
+		//	if (foundAnimationDuration == true && curveSize is not null)
+		//	{
+		//		var num = (NSNumber)NSObject.FromObject(curveSize);
+		//		AnimationDuration = (double)num;
+		//	}
+
+		//	//if let textFieldView = textFieldView, topViewBeginOrigin.equalTo(IQKeyboardManager.kIQCGPointInvalid) {
+
+		//	//	//  keyboard is not showing(At the beginning only). We should save rootViewRect.
+		//	//	rootViewController = textFieldView.parentContainerViewController()
+
+		//	//if let controller = rootViewController {
+
+		//	//		if rootViewControllerWhilePopGestureRecognizerActive == controller {
+		//	//			topViewBeginOrigin = topViewBeginOriginWhilePopGestureRecognizerActive
+	
+		//	//	}
+		//	//		else
+		//	//		{
+		//	//			topViewBeginOrigin = controller.view.frame.origin
+
+		//	//	}
+
+		//	//		rootViewControllerWhilePopGestureRecognizerActive = nil
+
+		//	//	topViewBeginOriginWhilePopGestureRecognizerActive = IQKeyboardManager.kIQCGPointInvalid
 
 
-		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString ("UIKeyboardWillShowNotification"), (notification) =>
-		{
-			NSObject? frameSize = null;
-			NSObject? curveSize = null;
+		//	//	self.showLog("Saving \(controller) beginning origin: \(self.topViewBeginOrigin)")
 
-			var foundFrameSize = notification.UserInfo?.TryGetValue(new NSString ("UIKeyboardFrameEndUserInfoKey"), out frameSize);
-			if (foundFrameSize == true && frameSize is not null)
-			{
-				var frameSizeRect = DescriptionToCGRect(frameSize.Description);
-				if (frameSizeRect is not null)
-					KeyboardFrame = (CGRect)frameSizeRect;
-			}
+		//	//}
+		//	//}
 
-			//var foundCurve = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardAnimationCurveUserInfoKey"), out curveSize);
-			var foundAnimationDuration = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardAnimationDurationUserInfoKey"), out curveSize);
-			if (foundAnimationDuration == true && curveSize is not null)
-			{
-				var num = (NSNumber)NSNumber.FromObject(curveSize);
-				AnimationDuration = (double)num;
-			}
+		//	if (TopViewBeginOrigin == InvalidPoint && rootController is not null)
+		//	{
+		//		TopViewBeginOrigin = new CGPoint(rootController.Frame.X, rootController.Frame.Y);
+		//	}
 
-			if (!IsKeyboardShowing)
-			{
-				AdjustPostition();
-				IsKeyboardShowing = true;
-			}
+		//	if (!IsKeyboardShowing)
+		//	{
+		//		AdjustPosition();
+		//		IsKeyboardShowing = true;
+		//	}
 
-		});
+		//});
 
-		DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardDidHideNotification"), (notification) =>
-		{
-			NSObject? curveSize = null;
+		//DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardDidHideNotification"), (notification) =>
+		//{
+		//	NSObject? curveSize = null;
 
-			var foundAnimationDuration = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardAnimationDurationUserInfoKey"), out curveSize);
-			if (foundAnimationDuration == true && curveSize is not null)
-			{
-				var num = (NSNumber)NSNumber.FromObject(curveSize);
-				AnimationDuration = (double)num;
-			}
+		//	var foundAnimationDuration = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardAnimationDurationUserInfoKey"), out curveSize);
+		//	if (foundAnimationDuration == true && curveSize is not null)
+		//	{
+		//		var num = (NSNumber)NSObject.FromObject(curveSize);
+		//		AnimationDuration = (double)num;
+		//	}
 
+		//	if (LastScrollView is not null)
+		//	{
+		//		UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
+		//		{
 
+		//			if (LastScrollView.ContentInset != StartingContentInsets)
+		//			{
+		//				LastScrollView.ContentInset = StartingContentInsets;
+		//				LastScrollView.ScrollIndicatorInsets = StartingScrollIndicatorInsets;
+		//			}
 
-			if (LastScrollView is not null)
-			{
-				UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
-				{
-
-					if (LastScrollView.ContentInset != StartingContentInsets)
-					{
-						LastScrollView.ContentInset = StartingContentInsets;
-						LastScrollView.ScrollIndicatorInsets = StartingScrollIndicatorInsets;
-					}
-
-					// TODO Not implemented section
-					//	if lastScrollView.shouldRestoreScrollViewContentOffset, !lastScrollView.contentOffset.equalTo(self.startingContentOffset) {
-					//		self.showLog("Restoring contentOffset to: \(self.startingContentOffset)")
+		//			// TODO Not implemented section
+		//			//	if lastScrollView.shouldRestoreScrollViewContentOffset, !lastScrollView.contentOffset.equalTo(self.startingContentOffset) {
+		//			//		self.showLog("Restoring contentOffset to: \(self.startingContentOffset)")
 
 
-					//	let animatedContentOffset = self.textFieldView?.superviewOfClassType(UIStackView.self, belowView: lastScrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
+		//			//	let animatedContentOffset = self.textFieldView?.superviewOfClassType(UIStackView.self, belowView: lastScrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
 
-					//	if animatedContentOffset {
-					//			lastScrollView.setContentOffset(self.startingContentOffset, animated: UIView.areAnimationsEnabled)
+		//			//	if animatedContentOffset {
+		//			//			lastScrollView.setContentOffset(self.startingContentOffset, animated: UIView.areAnimationsEnabled)
 
-					//	}
-					//		else
-					//		{
-					//			lastScrollView.contentOffset = self.startingContentOffset
+		//			//	}
+		//			//		else
+		//			//		{
+		//			//			lastScrollView.contentOffset = self.startingContentOffset
 
-					//	}
-
-
-
-
-
-
-					//	var superScrollView: UIScrollView ? = lastScrollView
-
-
-					//while let scrollView = superScrollView {
-
-					//		let contentSize = CGSize(width: max(scrollView.contentSize.width, scrollView.frame.width), height: max(scrollView.contentSize.height, scrollView.frame.height))
-
-
-					//	let minimumY = contentSize.height - scrollView.frame.height
-
-
-					//	if minimumY < scrollView.contentOffset.y {
-
-					//			let newContentOffset = CGPoint(x: scrollView.contentOffset.x, y: minimumY)
-
-					//		if scrollView.contentOffset.equalTo(newContentOffset) == false {
-
-					//				let animatedContentOffset = self.textFieldView?.superviewOfClassType(UIStackView.self, belowView: scrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
-
-					//			if animatedContentOffset {
-					//					scrollView.setContentOffset(newContentOffset, animated: UIView.areAnimationsEnabled)
-
-					//			}
-					//				else
-					//				{
-					//					scrollView.contentOffset = newContentOffset
-
-					//			}
-
-					//				self.showLog("Restoring contentOffset to: \(self.startingContentOffset)")
-
-					//		}
-					//		}
-
-					//		superScrollView = scrollView.superviewOfClassType(UIScrollView.self) as? UIScrollView
-
-					//}
-
-					var superScrollView = LastScrollView as UIScrollView;
-					while (superScrollView is not null)
-					{
-						var contentSize = new CGSize(Math.Max(superScrollView.ContentSize.Width, superScrollView.Frame.Width),
-							Math.Max(superScrollView.ContentSize.Height, superScrollView.Frame.Height));
-
-						var minY = contentSize.Height - superScrollView.Frame.Height;
-						if (minY < superScrollView.ContentOffset.Y)
-						{
-							var newContentOffset = new CGPoint(superScrollView.ContentOffset.X, minY);
-							if (!superScrollView.ContentOffset.Equals(newContentOffset))
-							{
-								if (view?.Superview is UIStackView)
-									superScrollView.SetContentOffset(newContentOffset, UIView.AnimationsEnabled);
-								else
-									superScrollView.ContentOffset = newContentOffset;
-							}
-						}
-
-						superScrollView = superScrollView.Superview as UIScrollView;
-					}
+		//			//	}
 
 
 
-				}, () => { });
-			}
 
-			// TODO Restore is not working properly :(
-			if (IsKeyboardShowing)
-				RestorePosition();
 
-			LastScrollView = null;
-			KeyboardFrame = CGRect.Empty;
-			StartingContentInsets = new UIEdgeInsets ();
-			StartingScrollIndicatorInsets = new UIEdgeInsets ();
-			StartingContentInsets = new UIEdgeInsets();
 
-			IsKeyboardShowing = false;
-		});
+		//			//	var superScrollView: UIScrollView ? = lastScrollView
+
+
+		//			//while let scrollView = superScrollView {
+
+		//			//		let contentSize = CGSize(width: max(scrollView.contentSize.width, scrollView.frame.width), height: max(scrollView.contentSize.height, scrollView.frame.height))
+
+
+		//			//	let minimumY = contentSize.height - scrollView.frame.height
+
+
+		//			//	if minimumY < scrollView.contentOffset.y {
+
+		//			//			let newContentOffset = CGPoint(x: scrollView.contentOffset.x, y: minimumY)
+
+		//			//		if scrollView.contentOffset.equalTo(newContentOffset) == false {
+
+		//			//				let animatedContentOffset = self.textFieldView?.superviewOfClassType(UIStackView.self, belowView: scrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
+
+		//			//			if animatedContentOffset {
+		//			//					scrollView.setContentOffset(newContentOffset, animated: UIView.areAnimationsEnabled)
+
+		//			//			}
+		//			//				else
+		//			//				{
+		//			//					scrollView.contentOffset = newContentOffset
+
+		//			//			}
+
+		//			//				self.showLog("Restoring contentOffset to: \(self.startingContentOffset)")
+
+		//			//		}
+		//			//		}
+
+		//			//		superScrollView = scrollView.superviewOfClassType(UIScrollView.self) as? UIScrollView
+
+		//			//}
+
+		//			var superScrollView = LastScrollView as UIScrollView;
+		//			while (superScrollView is not null)
+		//			{
+		//				var contentSize = new CGSize(Math.Max(superScrollView.ContentSize.Width, superScrollView.Frame.Width),
+		//					Math.Max(superScrollView.ContentSize.Height, superScrollView.Frame.Height));
+
+		//				var minY = contentSize.Height - superScrollView.Frame.Height;
+		//				if (minY < superScrollView.ContentOffset.Y)
+		//				{
+		//					var newContentOffset = new CGPoint(superScrollView.ContentOffset.X, minY);
+		//					if (!superScrollView.ContentOffset.Equals(newContentOffset))
+		//					{
+		//						if (view?.Superview is UIStackView)
+		//							superScrollView.SetContentOffset(newContentOffset, UIView.AnimationsEnabled);
+		//						else
+		//							superScrollView.ContentOffset = newContentOffset;
+		//					}
+		//				}
+
+		//				superScrollView = superScrollView.Superview as UIScrollView;
+		//			}
+
+
+
+		//		}, () => { });
+		//	}
+
+		//	// TODO Restore is not working properly :(
+		//	if (IsKeyboardShowing)
+		//		RestorePosition();
+
+		//	LastScrollView = null;
+		//	KeyboardFrame = CGRect.Empty;
+		//	StartingContentInsets = new UIEdgeInsets ();
+		//	StartingScrollIndicatorInsets = new UIEdgeInsets ();
+		//	StartingContentInsets = new UIEdgeInsets();
+
+		//	IsKeyboardShowing = false;
+		//});
 	}
 
 	// used to get the numeric values from the UserInfo dictionary's NSObject value to CGRect
@@ -285,7 +309,7 @@ internal static class KeyboardAutoManagerScroll
 			NSNotificationCenter.DefaultCenter.RemoveObserver(DidHideToken);
 	}
 
-	internal static void AdjustPostition()
+	internal static void AdjustPosition()
 	{
 		if (view is not UITextField field && view is not UITextView)
 			return;
@@ -1528,6 +1552,7 @@ internal static class KeyboardAutoManagerScroll
 		MovedDistance = 0;
 
 		rootController = null;
+		TopViewBeginOrigin = InvalidPoint;
 	}
 
 
