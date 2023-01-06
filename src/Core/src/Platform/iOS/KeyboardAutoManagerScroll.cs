@@ -84,7 +84,6 @@ internal static class KeyboardAutoManagerScroll
 					KeyboardFrame = (CGRect)frameSizeRect;
 			}
 
-			//var foundCurve = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardAnimationCurveUserInfoKey"), out curveSize);
 			var foundAnimationDuration = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardAnimationDurationUserInfoKey"), out curveSize);
 			if (foundAnimationDuration == true && curveSize is not null)
 			{
@@ -92,44 +91,14 @@ internal static class KeyboardAutoManagerScroll
 				AnimationDuration = (double)num;
 			}
 
-			//if let textFieldView = textFieldView, topViewBeginOrigin.equalTo(IQKeyboardManager.kIQCGPointInvalid) {
-
-			//	//  keyboard is not showing(At the beginning only). We should save rootViewRect.
-			//	rootViewController = textFieldView.parentContainerViewController()
-
-			//if let controller = rootViewController {
-
-			//		if rootViewControllerWhilePopGestureRecognizerActive == controller {
-			//			topViewBeginOrigin = topViewBeginOriginWhilePopGestureRecognizerActive
-	
-			//	}
-			//		else
-			//		{
-			//			topViewBeginOrigin = controller.view.frame.origin
-
-			//	}
-
-			//		rootViewControllerWhilePopGestureRecognizerActive = nil
-
-			//	topViewBeginOriginWhilePopGestureRecognizerActive = IQKeyboardManager.kIQCGPointInvalid
-
-
-			//	self.showLog("Saving \(controller) beginning origin: \(self.topViewBeginOrigin)")
-
-			//}
-			//}
-
 			if (TopViewBeginOrigin == InvalidPoint && rootController is not null)
-			{
 				TopViewBeginOrigin = new CGPoint(rootController.Frame.X, rootController.Frame.Y);
-			}
 
 			if (!IsKeyboardShowing)
 			{
 				AdjustPosition();
 				IsKeyboardShowing = true;
 			}
-
 		});
 
 		DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardDidHideNotification"), (notification) =>
@@ -147,72 +116,11 @@ internal static class KeyboardAutoManagerScroll
 			{
 				UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
 				{
-
 					if (LastScrollView.ContentInset != StartingContentInsets)
 					{
 						LastScrollView.ContentInset = StartingContentInsets;
 						LastScrollView.ScrollIndicatorInsets = StartingScrollIndicatorInsets;
 					}
-
-					// TODO Not implemented section
-					//	if lastScrollView.shouldRestoreScrollViewContentOffset, !lastScrollView.contentOffset.equalTo(self.startingContentOffset) {
-					//		self.showLog("Restoring contentOffset to: \(self.startingContentOffset)")
-
-
-					//	let animatedContentOffset = self.textFieldView?.superviewOfClassType(UIStackView.self, belowView: lastScrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
-
-					//	if animatedContentOffset {
-					//			lastScrollView.setContentOffset(self.startingContentOffset, animated: UIView.areAnimationsEnabled)
-
-					//	}
-					//		else
-					//		{
-					//			lastScrollView.contentOffset = self.startingContentOffset
-
-					//	}
-
-
-
-
-
-
-					//	var superScrollView: UIScrollView ? = lastScrollView
-
-
-					//while let scrollView = superScrollView {
-
-					//		let contentSize = CGSize(width: max(scrollView.contentSize.width, scrollView.frame.width), height: max(scrollView.contentSize.height, scrollView.frame.height))
-
-
-					//	let minimumY = contentSize.height - scrollView.frame.height
-
-
-					//	if minimumY < scrollView.contentOffset.y {
-
-					//			let newContentOffset = CGPoint(x: scrollView.contentOffset.x, y: minimumY)
-
-					//		if scrollView.contentOffset.equalTo(newContentOffset) == false {
-
-					//				let animatedContentOffset = self.textFieldView?.superviewOfClassType(UIStackView.self, belowView: scrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
-
-					//			if animatedContentOffset {
-					//					scrollView.setContentOffset(newContentOffset, animated: UIView.areAnimationsEnabled)
-
-					//			}
-					//				else
-					//				{
-					//					scrollView.contentOffset = newContentOffset
-
-					//			}
-
-					//				self.showLog("Restoring contentOffset to: \(self.startingContentOffset)")
-
-					//		}
-					//		}
-
-					//		superScrollView = scrollView.superviewOfClassType(UIScrollView.self) as? UIScrollView
-
-					//}
 
 					var superScrollView = LastScrollView as UIScrollView;
 					while (superScrollView is not null)
@@ -307,6 +215,10 @@ internal static class KeyboardAutoManagerScroll
 			NSNotificationCenter.DefaultCenter.RemoveObserver(WillShowToken);
 		if (DidHideToken is not null)
 			NSNotificationCenter.DefaultCenter.RemoveObserver(DidHideToken);
+		if (TextFieldToken is not null)
+			NSNotificationCenter.DefaultCenter.RemoveObserver(TextFieldToken);
+		if (TextViewToken is not null)
+			NSNotificationCenter.DefaultCenter.RemoveObserver(TextViewToken);
 	}
 
 	internal static void AdjustPosition()
@@ -320,53 +232,11 @@ internal static class KeyboardAutoManagerScroll
 		var rootViewOrigin = new CGPoint(rootFrame.GetMinX(), rootFrame.GetMinY());
 		var window = rootController.Window;
 
-
-		////Maintain KeyboardDistanceFromTextField
-		//var specialKeyboardDistanceFromTextField = textFieldView.KeyboardDistanceFromTextField
-
-
-		//if let searchBar = textFieldView.textFieldSearchBar() {
-		//	specialKeyboardDistanceFromTextField = searchBar.KeyboardDistanceFromTextField
-
-		//}
-
-		// 
-		//let newKeyboardDistanceFromTextField = (specialKeyboardDistanceFromTextField == kIQUseDefaultKeyboardDistance) ? KeyboardDistanceFromTextField : specialKeyboardDistanceFromTextField
-
-
 		// TODO Set the expected distance between the keyboard and the textfield depending if we are in a search bar or not
 		var specialKeyboardDistanceFromTextField = view.GetTextFieldSearchBar() is null ?
 			KeyboardDistanceFromTextField : SearchBarKeyboardDistanceFromTextField;
 
-
-		//		var kbSize = KeyboardFrame.size
-
-
-		//		do
-		//		{
-		//			var kbFrame = KeyboardFrame
-
-
-		//			kbFrame.origin.y -= newKeyboardDistanceFromTextField
-
-		//			kbFrame.size.height += newKeyboardDistanceFromTextField
-
-		//			//Calculating actual keyboard covered size respect to window, keyboard frame may be different when hardware keyboard is attached (Bug ID: #469) (Bug ID: #381) (Bug ID: #1506)
-		//			let intersectRect = kbFrame.intersection(window.frame)
-
-
-		//			if intersectRect.isNull {
-		//				kbSize = CGSize(width: kbFrame.size.width, height: 0)
-
-		//			}
-		//			else
-		//			{
-		//				kbSize = intersectRect.size
-
-		//			}
-		//		}
-
-		// TODO Set up the keyboard size
+		// Establish the keyboard size
 		// https://learn.microsoft.com/en-us/dotnet/api/coregraphics.cgrect?view=xamarin-ios-sdk-12#properties
 		var kbSize = KeyboardFrame.Size;
 		var kbFrame = KeyboardFrame;
@@ -379,34 +249,7 @@ internal static class KeyboardAutoManagerScroll
 			kbSize = intersectRect.Size;
 
 
-
-
-
-		//		let statusBarHeight:
-		//		CGFloat
-
-		//		let navigationBarAreaHeight:
-		//		CGFloat
-
-		//		if let navigationController = rootController.navigationController {
-		//			navigationBarAreaHeight = navigationController.navigationBar.frame.maxY
-
-		//		} else
-		//		{
-		//#if swift(>=5.1)
-		//            if #available(iOS 13, *) {
-		//                statusBarHeight = window.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
-		//            } else {
-		//                statusBarHeight = UIApplication.shared.statusBarFrame.height
-		//            }
-		//#else
-		//			statusBarHeight = UIApplication.shared.statusBarFrame.height
-		//#endif
-		//			navigationBarAreaHeight = statusBarHeight
-
-		//		}
-
-		// TODO Set the StatusBarHeight and NavigationBarAreaHeight
+		// Set the StatusBarHeight and NavigationBarAreaHeight
 
 		nfloat statusBarHeight;
 		nfloat navigationBarAreaHeight;
@@ -425,31 +268,7 @@ internal static class KeyboardAutoManagerScroll
 			navigationBarAreaHeight = statusBarHeight;
 		}
 
-
-
-
-
-		//		let layoutAreaHeight: CGFloat = rootController.view.layoutMargins.bottom
-
-
-		//		let isTextView: Bool
-		//		let isNonScrollableTextView:
-		//		Bool
-
-
-		//		if let textView = textFieldView as? UIScrollView, textFieldView.responds(to: #selector(getter: UITextView.isEditable)) {
-
-		//            isTextView = true
-
-		//			isNonScrollableTextView = !textView.isScrollEnabled
-
-		//		} else {
-		//            isTextView = false
-		//            isNonScrollableTextView = false
-		//        }
-
-
-		//TODO Set up isTextView and isNonScrollableTextView
+		// Do we have a UITextView or a UITextField
 
 		var layoutAreaHeight = rootController.LayoutMargins.Bottom;
 		var isTextView = false;
@@ -459,6 +278,8 @@ internal static class KeyboardAutoManagerScroll
 		{
 			isTextView = true;
 			isNonScrollableTextView = !scrollView.ScrollEnabled;
+			// TODO the bottom of the scrollView is now good, but the top goes too high now so maybe this isnt right...
+			//isNonScrollableTextView = scrollView.ScrollEnabled;
 		}
 
 
@@ -483,16 +304,27 @@ internal static class KeyboardAutoManagerScroll
 
 		//showLog("Need to move: \(move)")
 
-		// TODO Figure out how much things need to move
-
 		var topLayoutGuide = Math.Max(navigationBarAreaHeight, layoutAreaHeight) + 5;
 		var bottomLayoutGuide = (isTextView && !isNonScrollableTextView) ? 0 : rootController.LayoutMargins.Bottom;
+
+		// the height that will be above the keyboard
 		var visibleHeight = window.Frame.Height - kbSize.Height;
 
-		var viewRectInWindowMaxY = view.ConvertRectToView(view.Bounds, window).GetMaxY();
-		var viewRectInRootSuperviewMinY = view.ConvertRectToView(view.Bounds, rootController.Superview).GetMinY();
+		// TODO DEBUGGING
+		var viewRectInWindowMax = view.Superview.ConvertRectToView(view.Frame, window);
+		var viewRectInRootSuperview = view.Superview.ConvertRectToView(view.Frame, rootController.Superview);
+
+		var viewRectInWindowMaxY = view.Superview.ConvertRectToView(view.Frame, window).GetMaxY();
+		var viewRectInRootSuperviewMinY = view.Superview.ConvertRectToView(view.Frame, rootController.Superview).GetMinY();
+
+		// if move is positive, the textField is hidden behind the keyboard
+		// if move is negative, the textField is not blocked by the keyboard
 		nfloat move;
 
+		var m1 = viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide;
+		var m2 = (nfloat)Math.Min(viewRectInRootSuperviewMinY - topLayoutGuide, viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide);
+
+		// if the TextView is not scrollable, scroll to the bottom of the part of the view
 		if (isNonScrollableTextView)
 			move = viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide;
 		else
@@ -523,8 +355,8 @@ internal static class KeyboardAutoManagerScroll
 		UIScrollView? superScrollView = null;
 		var superView = view.Superview as UIScrollView;
 		while (superView is not null)
-		{
-			if (superView.ScrollEnabled && ShouldIgnoreScrollingAdjustment)
+		{ 
+			if (superView.ScrollEnabled && !ShouldIgnoreScrollingAdjustment)
 			{
 				superScrollView = superView;
 				break;
@@ -1296,6 +1128,7 @@ internal static class KeyboardAutoManagerScroll
 
 			var keyboardOverlapping = rootSuperViewFrameInWindow.GetMaxY() - keyboardYPosition;
 
+			// how much of the textView can fit on the screen with the keyboard up
 			var textViewHeight = Math.Min(textView.Frame.Height, rootSuperViewFrameInWindow.Height - topLayoutGuide - keyboardOverlapping);
 
 			if (textView.Frame.Size.Height - textView.ContentInset.Bottom > textViewHeight)
@@ -1369,6 +1202,8 @@ internal static class KeyboardAutoManagerScroll
 
 		if (move >= 0)
 		{
+			// TODO Somewhere it is not calculating the line/position inside the UITextView and just using the middle of the view maybe
+			// resulting in the scroll not being high enough over the keyboard
 			rootViewOrigin.Y = (nfloat)Math.Max(rootViewOrigin.Y - move, Math.Min(0, -(kbSize.Height - specialKeyboardDistanceFromTextField)));
 
 			if (rootController.Frame.X != rootViewOrigin.X || rootController.Frame.Y != rootViewOrigin.Y)
