@@ -5,6 +5,7 @@ using Foundation;
 using UIKit;
 using ObjCRuntime;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Microsoft.Maui.Platform;
 
@@ -31,14 +32,14 @@ internal static class KeyboardAutoManagerScroll
 	static bool ShouldIgnoreContentInsetAdjustment;
 
 	static nfloat KeyboardDistanceFromTextField = 10.0f;
-	static nfloat SearchBarKeyboardDistanceFromTextField = 15.0f; // not sure what value IQKeyboard uses
+	static nfloat SearchBarKeyboardDistanceFromTextField = 15.0f;
 	static CGRect KeyboardFrame = CGRect.Empty;
 	static double AnimationDuration = 0.25;
 	static UIViewAnimationOptions AnimationCurve = UIViewAnimationOptions.CurveEaseOut;
-	static UIEdgeInsets uIEdgeInsets = new UIEdgeInsets ();
+	static UIEdgeInsets uIEdgeInsets = new UIEdgeInsets();
 	static bool LayoutifNeededOnUpdate = false;
-	static CGPoint TopViewBeginOrigin = new CGPoint (nfloat.MaxValue, nfloat.MaxValue);
-	static CGPoint InvalidPoint = new CGPoint (nfloat.MaxValue, nfloat.MaxValue);
+	static CGPoint TopViewBeginOrigin = new CGPoint(nfloat.MaxValue, nfloat.MaxValue);
+	static CGPoint InvalidPoint = new CGPoint(nfloat.MaxValue, nfloat.MaxValue);
 
 	static NSObject? WillShowToken = null;
 	static NSObject? DidHideToken = null;
@@ -48,6 +49,9 @@ internal static class KeyboardAutoManagerScroll
 
 	static UIView? view = null;
 	static UIView? rootController = null;
+	static CGRect? TextViewRect = null;
+	static CGRect? TextViewRectLocal = null;
+	static int TextViewTopDistance = 15;
 
 
 	// Set up the observers for the keyboard and the UITextField/UITextView
@@ -58,7 +62,7 @@ internal static class KeyboardAutoManagerScroll
 			if (notification.Object is not null)
 			{
 				view = (UIView)notification.Object;
-				rootController = view.GetViewController()?.GetContainerViewController();
+				rootController = view.GetUIResponder<ContainerViewController>()?.View;
 			}
 		});
 
@@ -67,16 +71,39 @@ internal static class KeyboardAutoManagerScroll
 			if (notification.Object is not null)
 			{
 				view = (UIView)notification.Object;
-				rootController = view.GetViewController()?.GetContainerViewController();
+
+				rootController = view.GetUIResponder<ContainerViewController>()?.View;
+
+				Task.Delay(200);
+
+				var v = view as UITextView;
+				nint cursorPosition;
+				if (v is UITextView vt)
+				{
+					// the selected text is not always updated when view takes focus
+					var selectedTextRange = vt.SelectedTextRange;
+					if (selectedTextRange is UITextRange selectedRange)
+					{
+						cursorPosition = vt.GetOffsetFromPosition(vt.BeginningOfDocument, selectedRange.Start);
+						//var realSelection = vt.GetTextRange(selectedRange.Start, vt.GetPosition(selectedRange, 1));
+						var rect = vt.GetFirstRectForRange(selectedRange);
+						var rect2 = vt.GetCaretRectForPosition(selectedRange.Start);
+						var newrect = vt.ConvertRectToView(rect, null);
+						var newrect2 = vt.ConvertRectToView(rect2, null);
+						TextViewRect = newrect2;
+						TextViewRectLocal = rect2;
+					}
+				}
+
 			}
 		});
 
-		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString ("UIKeyboardWillShowNotification"), (notification) =>
+		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillShowNotification"), (notification) =>
 		{
 			NSObject? frameSize = null;
 			NSObject? curveSize = null;
 
-			var foundFrameSize = notification.UserInfo?.TryGetValue(new NSString ("UIKeyboardFrameEndUserInfoKey"), out frameSize);
+			var foundFrameSize = notification.UserInfo?.TryGetValue(new NSString("UIKeyboardFrameEndUserInfoKey"), out frameSize);
 			if (foundFrameSize == true && frameSize is not null)
 			{
 				var frameSizeRect = DescriptionToCGRect(frameSize.Description);
@@ -101,7 +128,7 @@ internal static class KeyboardAutoManagerScroll
 			}
 		});
 
-		DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardDidHideNotification"), (notification) =>
+		DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillHideNotification"), (notification) =>
 		{
 			NSObject? curveSize = null;
 
@@ -149,14 +176,13 @@ internal static class KeyboardAutoManagerScroll
 				}, () => { });
 			}
 
-			// TODO Restore is not working properly :(
 			if (IsKeyboardShowing)
 				RestorePosition();
 
 			LastScrollView = null;
 			KeyboardFrame = CGRect.Empty;
-			StartingContentInsets = new UIEdgeInsets ();
-			StartingScrollIndicatorInsets = new UIEdgeInsets ();
+			StartingContentInsets = new UIEdgeInsets();
+			StartingScrollIndicatorInsets = new UIEdgeInsets();
 			StartingContentInsets = new UIEdgeInsets();
 
 			IsKeyboardShowing = false;
@@ -232,12 +258,10 @@ internal static class KeyboardAutoManagerScroll
 		var rootViewOrigin = new CGPoint(rootFrame.GetMinX(), rootFrame.GetMinY());
 		var window = rootController.Window;
 
-		// TODO Set the expected distance between the keyboard and the textfield depending if we are in a search bar or not
-		var specialKeyboardDistanceFromTextField = view.GetTextFieldSearchBar() is null ?
-			KeyboardDistanceFromTextField : SearchBarKeyboardDistanceFromTextField;
+		var specialKeyboardDistanceFromTextField = KeyboardDistanceFromTextField;
+		//var specialKeyboardDistanceFromTextField = view.GetTextFieldSearchBar() is null ?
+		//	KeyboardDistanceFromTextField : SearchBarKeyboardDistanceFromTextField;
 
-		// Establish the keyboard size
-		// https://learn.microsoft.com/en-us/dotnet/api/coregraphics.cgrect?view=xamarin-ios-sdk-12#properties
 		var kbSize = KeyboardFrame.Size;
 		var kbFrame = KeyboardFrame;
 		kbFrame.Y -= specialKeyboardDistanceFromTextField;
@@ -278,41 +302,13 @@ internal static class KeyboardAutoManagerScroll
 		{
 			isTextView = true;
 			isNonScrollableTextView = !scrollView.ScrollEnabled;
-			// TODO the bottom of the scrollView is now good, but the top goes too high now so maybe this isnt right...
-			//isNonScrollableTextView = scrollView.ScrollEnabled;
 		}
-
-
-		//let topLayoutGuide: CGFloat = max(navigationBarAreaHeight, layoutAreaHeight) + 5
-
-		//        let bottomLayoutGuide: CGFloat = (isTextView && !isNonScrollableTextView) ? 0 : rootController.view.layoutMargins.bottom  //Validation of textView for case where there is a tab bar at the bottom or running on iPhone X and textView is at the bottom.
-		//		let visibleHeight: CGFloat = window.frame.height-kbSize.height
-
-		//		//  Move positive = textField is hidden.
-		//		//  Move negative = textField is showing.
-		//		//  Calculating move position.
-		//		var move: CGFloat
-
-		//        //Special case: when the textView is not scrollable, then we'll be scrolling to the bottom part and let hide the top part above
-		//        if isNonScrollableTextView {
-		//            move = textFieldViewRectInWindow.maxY - visibleHeight + bottomLayoutGuide
-		//        } else
-		//{
-		//	move = min(textFieldViewRectInRootSuperview.minY - (topLayoutGuide), textFieldViewRectInWindow.maxY - visibleHeight + bottomLayoutGuide)
-
-		//		}
-
-		//showLog("Need to move: \(move)")
 
 		var topLayoutGuide = Math.Max(navigationBarAreaHeight, layoutAreaHeight) + 5;
 		var bottomLayoutGuide = (isTextView && !isNonScrollableTextView) ? 0 : rootController.LayoutMargins.Bottom;
 
 		// the height that will be above the keyboard
 		var visibleHeight = window.Frame.Height - kbSize.Height;
-
-		// TODO DEBUGGING
-		var viewRectInWindowMax = view.Superview.ConvertRectToView(view.Frame, window);
-		var viewRectInRootSuperview = view.Superview.ConvertRectToView(view.Frame, rootController.Superview);
 
 		var viewRectInWindowMaxY = view.Superview.ConvertRectToView(view.Frame, window).GetMaxY();
 		var viewRectInRootSuperviewMinY = view.Superview.ConvertRectToView(view.Frame, rootController.Superview).GetMinY();
@@ -331,91 +327,24 @@ internal static class KeyboardAutoManagerScroll
 			move = (nfloat)Math.Min(viewRectInRootSuperviewMinY - topLayoutGuide, viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide);
 
 
-		//		var superScrollView: UIScrollView?
-		//		var superView = textFieldView.superviewOfClassType(UIScrollView.self) as? UIScrollView
-
-		//		//Getting UIScrollView whose scrolling is enabled.    //  (Bug ID: #285)
-		//		while let view = superView {
-
-		//	if view.isScrollEnabled, !view.ShouldIgnoreScrollingAdjustment {
-		//		superScrollView = view
-
-		//				break
-
-		//			} else
-		//	{
-		//		//  Getting it's superScrollView.   //  (Enhancement ID: #21, #24)
-		//		superView = view.superviewOfClassType(UIScrollView.self) as? UIScrollView
-
-		//			}
-		//}
-
-		// TODO Get information about the TextView ScrollView
+		// If our textfield/textview's superview is a UIScrollView, save it
 
 		UIScrollView? superScrollView = null;
-		var superView = view.Superview as UIScrollView;
+		var superView = view.GetUIResponder<UIScrollView>();
 		while (superView is not null)
-		{ 
+		{
 			if (superView.ScrollEnabled && !ShouldIgnoreScrollingAdjustment)
 			{
 				superScrollView = superView;
 				break;
 			}
 
-			superView = superView.Superview as UIScrollView;
+			superView = superView.GetUIResponder<UIScrollView>();
 		}
-
-
-
-		////If there was a LastScrollView.    //  (Bug ID: #34)
-		//if let LastScrollView = LastScrollView {
-		//	//If we can't find current superScrollView, then setting LastScrollView to it's original form.
-		//	if superScrollView == nil {
-
-		//		if LastScrollView.contentInset != self.StartingContentInsets {
-		//			showLog("Restoring contentInset to: \(StartingContentInsets)")
-
-		//					UIView.animate(withDuration: AnimationDuration, delay: 0, options: AnimationCurve, animations: {
-		//				()->Void in
-
-		//                        LastScrollView.contentInset = self.StartingContentInsets
-
-		//						LastScrollView.scrollIndicatorInsets = self.StartingScrollIndicatorInsets
-
-		//					})
-		//                }
-
-		//	TODO if LastScrollView.ShouldRestoreScrollViewContentOffset, !LastScrollView.contentOffset.equalTo(StartingContentOffset) {
-		//			showLog("Restoring contentOffset to: \(StartingContentOffset)")
-
-
-		//					let animatedContentOffset = textFieldView.superviewOfClassType(UIStackView.self, belowView: LastScrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
-
-		//					if animatedContentOffset {
-		//				LastScrollView.setContentOffset(StartingContentOffset, animated: UIView.areAnimationsEnabled)
-
-		//					}
-		//			else
-		//			{
-		//				LastScrollView.contentOffset = StartingContentOffset
-
-		//					}
-		//		}
-		//		StartingContentInsets = UIEdgeInsets()
-
-		//				StartingScrollIndicatorInsets = UIEdgeInsets()
-
-		//				StartingContentOffset = CGPoint.zero
-
-		//				self.LastScrollView = nil
-
-		//			}
-
-
-		// TODO
 
 		if (LastScrollView is not null)
 		{
+			// if there is not a current superScrollView, restore LastScrollView
 			if (superScrollView is null)
 			{
 				if (LastScrollView.ContentInset != StartingContentInsets)
@@ -429,7 +358,7 @@ internal static class KeyboardAutoManagerScroll
 
 				if (ShouldRestoreScrollViewContentOffset && !LastScrollView.ContentOffset.Equals(StartingContentOffset))
 				{
-					if (view.Superview is UIStackView)
+					if (view.GetUIResponder<UIStackView>() is UIStackView)
 						LastScrollView.SetContentOffset(StartingContentOffset, UIView.AnimationsEnabled);
 					else
 						LastScrollView.ContentOffset = StartingContentOffset;
@@ -437,68 +366,12 @@ internal static class KeyboardAutoManagerScroll
 
 				StartingContentInsets = uIEdgeInsets;
 				StartingScrollIndicatorInsets = uIEdgeInsets;
-				StartingContentOffset = new CGPoint(0,0); // TODO is this the same as CGPoint.Zero?
+				StartingContentOffset = new CGPoint(0, 0);
 				LastScrollView = null;
-
 			}
 
-
-
-
-
-			//	else if superScrollView != LastScrollView {     //If both scrollView's are different, then reset LastScrollView to it's original frame and setting current scrollView as last scrollView.
-			//		if LastScrollView.contentInset != self.StartingContentInsets {
-			//			showLog("Restoring contentInset to: \(StartingContentInsets)")
-
-			//					UIView.animate(withDuration: AnimationDuration, delay: 0, options: AnimationCurve, animations: {
-			//				()->Void in
-
-			//                        LastScrollView.contentInset = self.StartingContentInsets
-
-			//						LastScrollView.scrollIndicatorInsets = self.StartingScrollIndicatorInsets
-
-			//					})
-			//                }
-
-			//		if LastScrollView.ShouldRestoreScrollViewContentOffset, !LastScrollView.contentOffset.equalTo(StartingContentOffset) {
-			//			showLog("Restoring contentOffset to: \(StartingContentOffset)")
-
-
-			//					let animatedContentOffset = textFieldView.superviewOfClassType(UIStackView.self, belowView: LastScrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
-
-			//					if animatedContentOffset {
-			//				LastScrollView.setContentOffset(StartingContentOffset, animated: UIView.areAnimationsEnabled)
-
-			//					}
-			//			else
-			//			{
-			//				LastScrollView.contentOffset = StartingContentOffset
-
-			//					}
-			//		}
-
-			//		self.LastScrollView = superScrollView
-
-			//				if let scrollView = superScrollView {
-			//			StartingContentInsets = scrollView.contentInset
-
-			//					StartingContentOffset = scrollView.contentOffset
-
-			//					#if swift(>=5.1)
-			//                    if #available(iOS 11.1, *) {
-			//                        StartingScrollIndicatorInsets = scrollView.verticalScrollIndicatorInsets
-			//                    } else {
-			//                        StartingScrollIndicatorInsets = scrollView.scrollIndicatorInsets
-			//                    }
-			//#else
-			//					StartingScrollIndicatorInsets = scrollView.scrollIndicatorInsets
-			//					#endif
-			//				}
-
-			//		showLog("Saving ScrollView New contentInset: \(StartingContentInsets) and contentOffset: \(StartingContentOffset)")
-
-			//			}
-
+			// if we have different LastScrollView and superScrollViews, set the LastScrollView to the original frame
+			// and set the superScrolView as the LastScrollView
 			else if (superScrollView != LastScrollView)
 			{
 				if (LastScrollView.ContentInset != StartingContentInsets)
@@ -512,7 +385,7 @@ internal static class KeyboardAutoManagerScroll
 
 				if (ShouldRestoreScrollViewContentOffset && !LastScrollView.ContentOffset.Equals(StartingContentOffset))
 				{
-					if (view.Superview is UIStackView)
+					if (view.GetUIResponder<UIStackView>() is UIStackView)
 						LastScrollView.SetContentOffset(StartingContentOffset, UIView.AnimationsEnabled);
 					else
 						LastScrollView.ContentOffset = StartingContentOffset;
@@ -530,32 +403,10 @@ internal static class KeyboardAutoManagerScroll
 						StartingScrollIndicatorInsets = superScrollView.ScrollIndicatorInsets;
 				}
 			}
+		}
 
-
-		} // (LastScrollView is not null)
-
-		//	//Else the case where superScrollView == LastScrollView means we are on same scrollView after switching to different textField. So doing nothing, going ahead
-		//} else if let unwrappedSuperScrollView = superScrollView {    //If there was no LastScrollView and we found a current scrollView. then setting it as LastScrollView.
-		//	LastScrollView = unwrappedSuperScrollView
-
-		//			StartingContentInsets = unwrappedSuperScrollView.contentInset
-
-		//			StartingContentOffset = unwrappedSuperScrollView.contentOffset
-
-		//			#if swift(>=5.1)
-		//            if #available(iOS 11.1, *) {
-		//                StartingScrollIndicatorInsets = unwrappedSuperScrollView.verticalScrollIndicatorInsets
-		//            } else {
-		//                StartingScrollIndicatorInsets = unwrappedSuperScrollView.scrollIndicatorInsets
-		//            }
-		//#else
-		//			StartingScrollIndicatorInsets = unwrappedSuperScrollView.scrollIndicatorInsets
-		//			#endif
-
-		//			showLog("Saving ScrollView contentInset: \(StartingContentInsets) and contentOffset: \(StartingContentOffset)")
-
-		//		}
-
+		// If there was no LastScrollView, but there is a superScrollView,
+		// set the LastScrollView to be the superScrollView
 		else if (superScrollView is not null)
 		{
 			LastScrollView = superScrollView;
@@ -568,66 +419,7 @@ internal static class KeyboardAutoManagerScroll
 				StartingScrollIndicatorInsets = superScrollView.ScrollIndicatorInsets;
 		}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		////  Special case for ScrollView.
-		////  If we found LastScrollView then setting it's contentOffset to show textField.
-		//if let LastScrollView = LastScrollView {
-		//	//Saving
-		//	var lastView = textFieldView
-
-		//			var superScrollView = self.LastScrollView
-
-
-		//			while let scrollView = superScrollView {
-
-		//		var shouldContinue = false
-
-
-		//				if move > 0 {
-		//			shouldContinue = move > (-scrollView.contentOffset.y - scrollView.contentInset.top)
-
-
-		//				}
-		//		else if let tableView = scrollView.superviewOfClassType(UITableView.self) as? UITableView {
-
-		//			shouldContinue = scrollView.contentOffset.y > 0
-
-
-		//					if shouldContinue, let tableCell = textFieldView.superviewOfClassType(UITableViewCell.self) as? UITableViewCell, let indexPath = tableView.indexPath(for: tableCell), let previousIndexPath = tableView.previousIndexPath(of: indexPath) {
-
-		//				let previousCellRect = tableView.rectForRow(at: previousIndexPath)
-
-		//						if !previousCellRect.isEmpty {
-		//					let previousCellRectInRootSuperview = tableView.convert(previousCellRect, to: rootController.view.superview)
-
-
-		//							move = min(0, previousCellRectInRootSuperview.maxY - topLayoutGuide)
-
-		//						}
-		//			}
-
-
+		// if we found a LastScrollView above, then set the contentOffset to see textField
 		if (LastScrollView is not null)
 		{
 			var lastView = view;
@@ -637,15 +429,16 @@ internal static class KeyboardAutoManagerScroll
 			{
 				var shouldContinue = false;
 
-				if (move > 0) {
-					shouldContinue = MovedDistance > (-superScrollView.ContentOffset.Y - superScrollView.ContentInset.Top);
+				if (move > 0)
+				{
+					shouldContinue = move > -superScrollView.ContentOffset.Y - superScrollView.ContentInset.Top;
 				}
 
-				else if (superScrollView.Superview is UITableView tableView)
+				else if (superScrollView.GetUIResponder<UITableView>() is UITableView tableView)
 				{
 					shouldContinue = superScrollView.ContentOffset.Y > 0;
 
-					if (shouldContinue && view.Superview is UITableViewCell tableCell
+					if (shouldContinue && view.GetUIResponder<UITableViewCell>() is UITableViewCell tableCell
 						&& tableView.IndexPathForCell(tableCell) is NSIndexPath indexPath
 						&& tableView.GetPreviousIndexPath(indexPath) is NSIndexPath previousIndexPath)
 					{
@@ -658,34 +451,14 @@ internal static class KeyboardAutoManagerScroll
 					}
 				}
 
-
-				//		} else if let collectionView = scrollView.superviewOfClassType(UICollectionView.self) as? UICollectionView {
-
-				//			shouldContinue = scrollView.contentOffset.y > 0
-
-
-				//					if shouldContinue, let collectionCell = textFieldView.superviewOfClassType(UICollectionViewCell.self) as? UICollectionViewCell, let indexPath = collectionView.indexPath(for: collectionCell), let previousIndexPath = collectionView.previousIndexPath(of: indexPath), let attributes = collectionView.layoutAttributesForItem(at: previousIndexPath) {
-
-				//				let previousCellRect = attributes.frame
-
-				//						if !previousCellRect.isEmpty {
-				//					let previousCellRectInRootSuperview = collectionView.convert(previousCellRect, to: rootController.view.superview)
-
-
-				//							move = min(0, previousCellRectInRootSuperview.maxY - topLayoutGuide)
-
-				//						}
-				//			}
-
-
-				else if (superScrollView.Superview is UICollectionView collectionView)
+				else if (superScrollView.GetUIResponder<UICollectionView>() is UICollectionView collectionView)
 				{
 					shouldContinue = superScrollView.ContentOffset.Y > 0;
 
-					if (shouldContinue && view.Superview is UICollectionViewCell collectionCell
+					if (shouldContinue && view.GetUIResponder<UICollectionViewCell>() is UICollectionViewCell collectionCell
 						&& collectionView.IndexPathForCell(collectionCell) is NSIndexPath indexPath
 						&& collectionView.GetPreviousIndexPath(indexPath) is NSIndexPath previousIndexPath
-						&&  collectionView.GetLayoutAttributesForItem(previousIndexPath) is UICollectionViewLayoutAttributes attributes)
+						&& collectionView.GetLayoutAttributesForItem(previousIndexPath) is UICollectionViewLayoutAttributes attributes)
 					{
 						var previousCellRect = attributes.Frame;
 
@@ -696,30 +469,6 @@ internal static class KeyboardAutoManagerScroll
 						}
 					}
 				}
-
-				//		} else
-				//		{
-
-				//			if isNonScrollableTextView {
-				//				shouldContinue = textFieldViewRectInWindow.maxY < visibleHeight + bottomLayoutGuide
-
-
-				//						if shouldContinue {
-				//					move = min(0, textFieldViewRectInWindow.maxY - visibleHeight + bottomLayoutGuide)
-
-				//						}
-				//			}
-				//			else
-				//			{
-				//				shouldContinue = textFieldViewRectInRootSuperview.minY < topLayoutGuide
-
-
-				//						if shouldContinue {
-				//					move = min(0, textFieldViewRectInRootSuperview.minY - topLayoutGuide)
-
-				//						}
-				//			}
-				//		}
 
 				else
 				{
@@ -739,92 +488,24 @@ internal static class KeyboardAutoManagerScroll
 					}
 				}
 
-
-				//		//Looping in upper hierarchy until we don't found any scrollView in it's upper hirarchy till UIWindow object.
-				//		if shouldContinue {
-
-				//			var tempScrollView = scrollView.superviewOfClassType(UIScrollView.self) as? UIScrollView
-
-				//			var nextScrollView:
-				//			UIScrollView ?
-
-				//					while let view = tempScrollView {
-
-				//				if view.isScrollEnabled, !view.ShouldIgnoreScrollingAdjustment {
-				//					nextScrollView = view
-
-				//							break
-
-				//						} else
-				//				{
-				//					tempScrollView = view.superviewOfClassType(UIScrollView.self) as? UIScrollView
-
-				//						}
-				//			}
-
+				// Go up the hierarchy and look for other scrollViews until we reach the UIWindow
 				if (shouldContinue)
 				{
-					var tempScrollView = superScrollView.Superview as UIScrollView;
+					var tempScrollView = superScrollView.GetUIResponder<UIScrollView>() as UIScrollView;
 					UIScrollView? nextScrollView = null;
 
+					// set tempScrollView to highest scrollable superview of superScrollView
 					while (tempScrollView is not null)
 					{
-						if (tempScrollView.ScrollEnabled && ShouldIgnoreScrollingAdjustment)
+						if (tempScrollView.ScrollEnabled && !ShouldIgnoreScrollingAdjustment)
 						{
 							nextScrollView = tempScrollView;
 							break;
 						}
-						tempScrollView = tempScrollView.Superview as UIScrollView;
+						tempScrollView = tempScrollView.GetUIResponder<UIScrollView>() as UIScrollView;
 					}
 
-
-
-
-
-					//			//Getting lastViewRect.
-					//			if let lastViewRect = lastView.superview?.convert(lastView.frame, to: scrollView) {
-
-					//				//Calculating the expected Y offset from move and scrollView's contentOffset.
-					//				var shouldOffsetY = scrollView.contentOffset.y - min(scrollView.contentOffset.y, -move)
-
-					//						//Rearranging the expected Y offset according to the view.
-					//						if isNonScrollableTextView {
-					//					shouldOffsetY = min(shouldOffsetY, lastViewRect.maxY - visibleHeight + bottomLayoutGuide)
-
-					//						}
-					//				else
-					//				{
-					//					shouldOffsetY = min(shouldOffsetY, lastViewRect.minY)
-
-					//						}
-
-					//				//[_textFieldView isKindOfClass:[UITextView class]] If is a UITextView type
-					//				//nextScrollView == nil    If processing scrollView is last scrollView in upper hierarchy (there is no other scrollView upper hierrchy.)
-					//				//[_textFieldView isKindOfClass:[UITextView class]] If is a UITextView type
-					//				//shouldOffsetY >= 0     shouldOffsetY must be greater than in order to keep distance from navigationBar (Bug ID: #92)
-					//				if isTextView, !isNonScrollableTextView,
-					//                            nextScrollView == nil,
-					//                            shouldOffsetY >= 0 {
-
-					//					//  Converting Rectangle according to window bounds.
-					//					if let currentTextFieldViewRect = textFieldView.superview?.convert(textFieldView.frame, to: window) {
-
-					//						//Calculating expected fix distance which needs to be managed from navigation bar
-					//						let expectedFixDistance: CGFloat = currentTextFieldViewRect.minY - topLayoutGuide
-
-					//								//Now if expectedOffsetY (superScrollView.contentOffset.y + expectedFixDistance) is lower than current shouldOffsetY, which means we're in a position where navigationBar up and hide, then reducing shouldOffsetY with expectedOffsetY (superScrollView.contentOffset.y + expectedFixDistance)
-					//								shouldOffsetY = min(shouldOffsetY, scrollView.contentOffset.y + expectedFixDistance)
-
-					//								//Setting move to 0 because now we don't want to move any view anymore (All will be managed by our contentInset logic.
-					//								move = 0
-
-					//							} else
-					//					{
-					//						//Subtracting the Y offset from the move variable, because we are going to change scrollView's contentOffset.y to shouldOffsetY.
-					//						move -= (shouldOffsetY - scrollView.contentOffset.y)
-
-					//							}
-
+					// Get the lastViewRect
 					if (lastView.Superview.ConvertRectToView(lastView.Frame, superScrollView) is CGRect lastViewRect)
 					{
 						var shouldOffsetY = superScrollView.ContentOffset.Y - Math.Min(superScrollView.ContentOffset.Y, -move);
@@ -836,85 +517,29 @@ internal static class KeyboardAutoManagerScroll
 
 						if (isTextView && !isNonScrollableTextView && nextScrollView is null && shouldOffsetY >= 0)
 						{
+							// currentTextFieldViewRect is rectangle in regards to window bounds
 							if (view.Superview.ConvertRectToView(view.Frame, window) is CGRect currentTextFieldViewRect)
 							{
+								// figure out if we need to consider the navigation bar in our offset
 								var expectedFixDistance = currentTextFieldViewRect.GetMinY() - topLayoutGuide;
 
 								shouldOffsetY = Math.Min(shouldOffsetY, superScrollView.ContentOffset.Y + expectedFixDistance);
+
+								// no need to move now, contentInset will handle the moving logic
 								move = 0;
 							}
 							else
 							{
+								// the contentOffset.Y will change to shouldOffSetY so we can subtract the difference from the move
 								move -= (nfloat)(shouldOffsetY - superScrollView.ContentOffset.Y);
 							}
 						}
 
 						else
 						{
+							// the contentOffset.Y will change to shouldOffSetY so we can subtract the difference from the move
 							move -= (nfloat)(shouldOffsetY - superScrollView.ContentOffset.Y);
 						}
-
-
-
-						//				} else
-						//				{
-						//					//Subtracting the Y offset from the move variable, because we are going to change scrollView's contentOffset.y to shouldOffsetY.
-						//					move -= (shouldOffsetY - scrollView.contentOffset.y)
-
-						//						}
-
-						//				let newContentOffset = CGPoint(x: scrollView.contentOffset.x, y: shouldOffsetY)
-
-
-						//						if scrollView.contentOffset.equalTo(newContentOffset) == false {
-
-						//					showLog("old contentOffset: \(scrollView.contentOffset) new contentOffset: \(newContentOffset)")
-
-						//							self.showLog("Remaining Move: \(move)")
-
-						//							//Getting problem while using `setContentOffset:animated:`, So I used animation API.
-						//							UIView.animate(withDuration: AnimationDuration, delay: 0, options: AnimationCurve, animations: {
-						//						()->Void in
-
-						//                                let animatedContentOffset = textFieldView.superviewOfClassType(UIStackView.self, belowView: scrollView) != nil  //  (Bug ID: #1365, #1508, #1541)
-
-						//								if animatedContentOffset {
-						//							scrollView.setContentOffset(newContentOffset, animated: UIView.areAnimationsEnabled)
-
-						//								}
-						//						else
-						//						{
-						//							scrollView.contentOffset = newContentOffset
-
-						//								}
-						//					}, completion:
-						//					{
-						//						_ in
-
-						//                                if scrollView is UITableView || scrollView is UICollectionView
-						//									{
-						//										//This will update the next/previous states
-						//										self.addToolbarIfRequired()
-						//									}
-
-						//							})
-						//                        }
-						//			}
-
-						//			//  Getting next lastView & superScrollView.
-						//			lastView = scrollView
-
-						//					superScrollView = nextScrollView
-
-						//				}
-						//		else
-						//		{
-						//			move = 0
-
-						//					break
-
-						//				}
-						//	}
 
 						var newContentOffset = new CGPoint(superScrollView.ContentOffset.X, shouldOffsetY);
 
@@ -922,7 +547,7 @@ internal static class KeyboardAutoManagerScroll
 						{
 							UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
 							{
-								if (view.Superview is UIStackView)
+								if (view.GetUIResponder<UIStackView>() is UIStackView)
 									superScrollView.SetContentOffset(newContentOffset, UIView.AnimationsEnabled);
 								else
 									superScrollView.ContentOffset = newContentOffset;
@@ -930,81 +555,21 @@ internal static class KeyboardAutoManagerScroll
 							{
 								if (superScrollView is UITableView || superScrollView is UICollectionView)
 								{
-									// TODO add the method: AddToolbarIfRequired();
+									AddToolbarIfRequired();
 								}
 							});
 						}
 					}
 					lastView = superScrollView;
 					superScrollView = nextScrollView;
-				} // (shouldContinue)
+				}
 
 				else
 				{
 					move = 0;
 					break;
 				}
-			} // (superScrollView is not null)
-
-
-
-
-
-			//	//Updating contentInset
-			//	if let lastScrollViewRect = LastScrollView.superview?.convert(LastScrollView.frame, to: window),
-			//                LastScrollView.ShouldIgnoreContentInsetAdjustment == false {
-
-			//		var bottomInset: CGFloat = (kbSize.height) - (window.frame.height - lastScrollViewRect.maxY)
-
-			//				var bottomScrollIndicatorInset = bottomInset - newKeyboardDistanceFromTextField
-
-			//				// Update the insets so that the scroll vew doesn't shift incorrectly when the offset is near the bottom of the scroll view.
-			//				bottomInset = max(StartingContentInsets.bottom, bottomInset)
-
-			//				bottomScrollIndicatorInset = max(StartingScrollIndicatorInsets.bottom, bottomScrollIndicatorInset)
-
-
-			//				if #available(iOS 11, *) {
-			//                    bottomInset -= LastScrollView.safeAreaInsets.bottom
-
-			//					bottomScrollIndicatorInset -= LastScrollView.safeAreaInsets.bottom
-
-			//				}
-
-			//	var movedInsets = LastScrollView.contentInset
-
-			//				movedInsets.bottom = bottomInset
-
-
-			//				if LastScrollView.contentInset != movedInsets {
-			//		showLog("old ContentInset: \(LastScrollView.contentInset) new ContentInset: \(movedInsets)")
-
-
-			//					UIView.animate(withDuration: AnimationDuration, delay: 0, options: AnimationCurve, animations: {
-			//			()->Void in
-			//                        LastScrollView.contentInset = movedInsets
-
-
-			//						var newScrollIndicatorInset: UIEdgeInsets
-
-			//#if swift(>=5.1)
-			//                        if #available(iOS 11.1, *) {
-			//                            newScrollIndicatorInset = LastScrollView.verticalScrollIndicatorInsets
-			//                        } else {
-			//                            newScrollIndicatorInset = LastScrollView.scrollIndicatorInsets
-			//                        }
-			//#else
-			//						newScrollIndicatorInset = LastScrollView.scrollIndicatorInsets
-			//						#endif
-
-			//						newScrollIndicatorInset.bottom = bottomScrollIndicatorInset
-
-			//						LastScrollView.scrollIndicatorInsets = newScrollIndicatorInset
-
-			//					})
-			//                }
-			//}
-			//        }
+			}
 
 			if (LastScrollView.Superview.ConvertRectToView(LastScrollView.Frame, window) is CGRect lastScrollViewRect
 				&& !ShouldIgnoreContentInsetAdjustment)
@@ -1012,6 +577,7 @@ internal static class KeyboardAutoManagerScroll
 				var bottomInset = kbSize.Height - window.Frame.Height - lastScrollViewRect.GetMaxY();
 				var bottomScrollIndicatorInset = bottomInset - specialKeyboardDistanceFromTextField;
 
+				// update insets in case the offset is near the bottom on the scroll view
 				bottomInset = (nfloat)Math.Max(StartingContentInsets.Bottom, bottomInset);
 				bottomScrollIndicatorInset = (nfloat)Math.Max(StartingScrollIndicatorInsets.Bottom, bottomScrollIndicatorInset);
 
@@ -1040,88 +606,13 @@ internal static class KeyboardAutoManagerScroll
 						LastScrollView.ScrollIndicatorInsets = newScrollIndicatorInsets;
 					}, () => { });
 				}
-			} // (LastScrollView.Superview.ConvertRectToView(LastScrollView.Frame, window) is CGRect lastScrollViewRect)
-		} // (LastScrollView is not null)
+			}
+		}
 
-
-
-
-
-
-		//		//Special case for UITextView(Readjusting textView.contentInset when textView hight is too big to fit on screen)
-		//		//_lastScrollView       If not having inside any scrollView, (now contentInset manages the full screen textView.
-		//		//[_textFieldView isKindOfClass:[UITextView class]] If is a UITextView type
-		//		if let textView = textFieldView as? UIScrollView, textView.isScrollEnabled, textFieldView.responds(to: #selector(getter: UITextView.isEditable)) {
-
-		//            //                CGRect rootSuperViewFrameInWindow = [_rootViewController.view.superview convertRect:_rootViewController.view.superview.bounds toView:keyWindow];
-		//            //
-		//            //                CGFloat keyboardOverlapping = CGRectGetMaxY(rootSuperViewFrameInWindow) - keyboardYPosition;
-		//            //
-		//            //                CGFloat textViewHeight = MIN(CGRectGetHeight(_textFieldView.frame), (CGRectGetHeight(rootSuperViewFrameInWindow)-topLayoutGuide-keyboardOverlapping));
-		//            let keyboardYPosition = window.frame.height - (kbSize.height - newKeyboardDistanceFromTextField)
-
-		//			var rootSuperViewFrameInWindow = window.frame
-
-		//			if let rootSuperview = rootController.view.superview {
-		//			rootSuperViewFrameInWindow = rootSuperview.convert(rootSuperview.bounds, to: window)
-
-		//			}
-
-		//		let keyboardOverlapping = rootSuperViewFrameInWindow.maxY - keyboardYPosition
-
-
-		//			let textViewHeight = min(textView.frame.height, rootSuperViewFrameInWindow.height - topLayoutGuide - keyboardOverlapping)
-
-
-		//			if textView.frame.size.height - textView.contentInset.bottom > textViewHeight {
-		//			//_isTextViewContentInsetChanged,  If frame is not change by library in past, then saving user textView properties  (Bug ID: #92)
-		//			if !self.IsTextViewContentInsetChanged {
-		//				self.StartingTextViewContentInsets = textView.contentInset
-
-		//					#if swift(>=5.1)
-		//                    if #available(iOS 11.1, *) {
-		//                        self.StartingTextViewScrollIndicatorInsets = textView.verticalScrollIndicatorInsets
-		//                    } else {
-		//                        self.StartingTextViewScrollIndicatorInsets = textView.scrollIndicatorInsets
-		//                    }
-		//#else
-		//					self.StartingTextViewScrollIndicatorInsets = textView.scrollIndicatorInsets
-		//					#endif
-		//				}
-
-		//			self.IsTextViewContentInsetChanged = true
-
-
-		//				var newContentInset = textView.contentInset
-
-		//				newContentInset.bottom = textView.frame.size.height - textViewHeight
-
-
-		//				if #available(iOS 11, *) {
-		//                    newContentInset.bottom -= textView.safeAreaInsets.bottom
-
-		//				}
-
-		//		if textView.contentInset != newContentInset {
-		//			self.showLog("\(textFieldView) Old UITextView.contentInset: \(textView.contentInset) New UITextView.contentInset: \(newContentInset)")
-
-
-		//					UIView.animate(withDuration: AnimationDuration, delay: 0, options: AnimationCurve, animations: {
-		//				()->Void in
-
-		//                        textView.contentInset = newContentInset
-
-		//						textView.scrollIndicatorInsets = newContentInset
-
-		//					}, completion:
-		//			{ (_)->Void in })
-		//                }
-		//	}
-		//}
-
+		// readjust contentInset when the textView height is too large for the screen
 		if (view is UIScrollView textView && textView.ScrollEnabled && view is UITextView tview && tview.Editable)
 		{
-			var keyboardYPosition = window.Frame.Height - kbSize.Height - specialKeyboardDistanceFromTextField;
+			var keyboardYPosition = window.Frame.Height - kbSize.Height + specialKeyboardDistanceFromTextField;
 			var rootSuperViewFrameInWindow = window.Frame;
 			if (rootController.Superview is UIView v)
 				rootSuperViewFrameInWindow = v.ConvertRectToView(v.Bounds, window);
@@ -1131,6 +622,7 @@ internal static class KeyboardAutoManagerScroll
 			// how much of the textView can fit on the screen with the keyboard up
 			var textViewHeight = Math.Min(textView.Frame.Height, rootSuperViewFrameInWindow.Height - topLayoutGuide - keyboardOverlapping);
 
+			// if the entire textview cannot fit on the screen
 			if (textView.Frame.Size.Height - textView.ContentInset.Bottom > textViewHeight)
 			{
 				if (!IsTextViewContentInsetChanged)
@@ -1145,66 +637,84 @@ internal static class KeyboardAutoManagerScroll
 				IsTextViewContentInsetChanged = true;
 
 				var newContentInset = textView.ContentInset;
+
+				// set the bottom of the newContentInset to either the bottom of the textview
+				// or the lowest point that the clicked portion will still fit on the screen
 				newContentInset.Bottom = (nfloat)(textView.Frame.Size.Height - textViewHeight);
+
+				if (TextViewRectLocal is CGRect localViewRect && TextViewRect is CGRect viewRect && textViewHeight < textView.Frame.Size.Height - localViewRect.Y)
+					newContentInset.Bottom = (nfloat)viewRect.Y - TextViewTopDistance;
+
+
 
 				if (OperatingSystem.IsIOSVersionAtLeast(11, 0))
 					newContentInset.Bottom -= textView.SafeAreaInsets.Bottom;
 
 				if (textView.ContentInset != newContentInset)
 				{
-					UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
-					{
-						textView.ContentInset = newContentInset;
-						textView.ScrollIndicatorInsets = newContentInset;
-					}, () => { });
+					// Until this issue (https://github.com/dotnet/maui/issues/12485) is fixed, just move the entire parent scrollview
+
+					//UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
+					//{
+					//	textView.ContentInset = newContentInset;
+					//	textView.ScrollIndicatorInsets = newContentInset;
+					//}, () => { });
+
+					move += newContentInset.Bottom;
 				}
-			} // (textView.Frame.Size.Height - textView.ContentInset.Bottom > textViewHeight)
+			}
 		}
 
+		//// readjust contentInset when the textView height is too large for the screen
+		//if (view is UIScrollView textView && textView.ScrollEnabled && view is UITextView tview && tview.Editable)
+		//{
+		//	var keyboardYPosition = window.Frame.Height - kbSize.Height + specialKeyboardDistanceFromTextField;
+		//	var rootSuperViewFrameInWindow = window.Frame;
+		//	if (rootController.Superview is UIView v)
+		//		rootSuperViewFrameInWindow = v.ConvertRectToView(v.Bounds, window);
 
+		//	var keyboardOverlapping = rootSuperViewFrameInWindow.GetMaxY() - keyboardYPosition;
 
-		//        //  +Positive or zero.
-		//        if move >= 0 {
+		//	// how much of the textView can fit on the screen with the keyboard up
+		//	var textViewHeight = Math.Min(textView.Frame.Height, rootSuperViewFrameInWindow.Height - topLayoutGuide - keyboardOverlapping);
 
-		//	rootViewOrigin.y = max(rootViewOrigin.y - move, min(0, -(kbSize.height - newKeyboardDistanceFromTextField)))
-
-
-		//			if rootController.view.frame.origin.equalTo(rootViewOrigin) == false {
-		//		showLog("Moving Upward")
-
-
-		//				UIView.animate(withDuration: AnimationDuration, delay: 0, options: AnimationCurve, animations: {
-		//			()->Void in
-
-		//                    var rect = rootController.view.frame
-
-		//					rect.origin = rootViewOrigin
-
-		//					rootController.view.frame = rect
-
-		//					//Animating content if needed (Bug ID: #204)
-		//					if self.layoutIfNeededOnUpdate {
-		//				//Animating content (Bug ID: #160)
-		//				rootController.view.setNeedsLayout()
-
-		//						rootController.view.layoutIfNeeded()
-
-		//					}
-
-		//			self.showLog("Set \(rootController) origin to: \(rootViewOrigin)")
-
-		//				})
-		//            }
-
-		//	MovedDistance = (TopViewBeginOrigin.y - rootViewOrigin.y)
-
+		//	if (textView.Frame.Size.Height - textView.ContentInset.Bottom > textViewHeight)
+		//	{
+		//		if (!IsTextViewContentInsetChanged)
+		//		{
+		//			StartingTextViewContentInsets = textView.ContentInset;
+		//			if (OperatingSystem.IsIOSVersionAtLeast(11, 1))
+		//				StartingTextViewScrollIndicatorInsets = textView.VerticalScrollIndicatorInsets;
+		//			else
+		//				StartingTextViewScrollIndicatorInsets = textView.ScrollIndicatorInsets;
 		//		}
+
+		//		IsTextViewContentInsetChanged = true;
+
+		//		var newContentInset = textView.ContentInset;
+		//		newContentInset.Bottom = (nfloat)(textView.Frame.Size.Height - textViewHeight);
+
+		//		if (OperatingSystem.IsIOSVersionAtLeast(11, 0))
+		//			newContentInset.Bottom -= textView.SafeAreaInsets.Bottom;
+
+		//		if (textView.ContentInset != newContentInset)
+		//		{
+		//			// Until this issue (https://github.com/dotnet/maui/issues/12485) is fixed, just move the entire parent scrollview
+
+		//			//UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
+		//			//{
+		//			//	textView.ContentInset = newContentInset;
+		//			//	textView.ScrollIndicatorInsets = newContentInset;
+		//			//}, () => { });
+
+		//			move += newContentInset.Bottom;
+		//		}
+		//	}
+		//}
 
 		if (move >= 0)
 		{
-			// TODO Somewhere it is not calculating the line/position inside the UITextView and just using the middle of the view maybe
-			// resulting in the scroll not being high enough over the keyboard
-			rootViewOrigin.Y = (nfloat)Math.Max(rootViewOrigin.Y - move, Math.Min(0, -(kbSize.Height - specialKeyboardDistanceFromTextField)));
+			rootViewOrigin.Y = (nfloat)Math.Max(rootViewOrigin.Y - move, Math.Min(0, -kbSize.Height + specialKeyboardDistanceFromTextField));
 
 			if (rootController.Frame.X != rootViewOrigin.X || rootController.Frame.Y != rootViewOrigin.Y)
 			{
@@ -1226,59 +736,13 @@ internal static class KeyboardAutoManagerScroll
 			}
 
 			MovedDistance = (TopViewBeginOrigin.Y - rootViewOrigin.Y);
-		} // (move >= 0)
+		} 
 
-
-
-		//else
-		//{  //  -Negative
-		//	let disturbDistance: CGFloat = rootViewOrigin.y - TopViewBeginOrigin.y
-
-		//			//  disturbDistance Negative = frame disturbed.
-		//			//  disturbDistance positive = frame not disturbed.
-		//			if disturbDistance <= 0 {
-
-		//		rootViewOrigin.y -= max(move, disturbDistance)
-
-
-		//				if rootController.view.frame.origin.equalTo(rootViewOrigin) == false {
-		//			showLog("Moving Downward")
-		//					//  Setting adjusted rootViewRect
-		//					//  Setting adjusted rootViewRect
-		//					UIView.animate(withDuration: AnimationDuration, delay: 0, options: AnimationCurve, animations: {
-		//				()->Void in
-
-		//                        var rect = rootController.view.frame
-
-		//						rect.origin = rootViewOrigin
-
-		//						rootController.view.frame = rect
-
-		//						//Animating content if needed (Bug ID: #204)
-		//						if self.layoutIfNeededOnUpdate {
-		//					//Animating content (Bug ID: #160)
-		//					rootController.view.setNeedsLayout()
-
-		//							rootController.view.layoutIfNeeded()
-
-		//						}
-
-		//				self.showLog("Set \(rootController) origin to: \(rootViewOrigin)")
-
-		//					})
-		//                }
-
-		//		MovedDistance = (TopViewBeginOrigin.y - rootViewOrigin.y)
-
-		//			}
-		//}
-
-		//let elapsedTime = CACurrentMediaTime() - startTime
-		//        showLog("<<<<< \(#function) ended: \(elapsedTime) seconds <<<<<", indentation: -1)
-		//    }
-
+		// move is negative
 		else
 		{
+			// if distburbDistance is negative - frame is disturbed
+			// if distburbDistance is positive - frame is not disturbed
 			var disturbDistance = rootViewOrigin.Y - TopViewBeginOrigin.Y;
 
 			if (disturbDistance <= 0)
@@ -1308,59 +772,6 @@ internal static class KeyboardAutoManagerScroll
 		}
 	}
 
-
-
-	//internal func restorePosition()
-	//{
-
-	//	hasPendingAdjustRequest = false
-
-	//	//  Setting rootViewController frame to it's original position. //  (Bug ID: #18)
-	//	guard topViewBeginOrigin.equalTo(IQKeyboardManager.kIQCGPointInvalid) == false, let rootViewController = rootViewController else
-	//	{
-	//		return
-
-	//	}
-
-	//	if rootViewController.view.frame.origin.equalTo(self.topViewBeginOrigin) == false {
-	//		//Used UIViewAnimationOptionBeginFromCurrentState to minimize strange animations.
-	//		UIView.animate(withDuration: animationDuration, delay: 0, options: animationCurve, animations: {
-	//			()->Void in
-
-	//               self.showLog("Restoring \(rootViewController) origin to: \(self.topViewBeginOrigin)")
-
-	//			//  Setting it's new frame
-	//			var rect = rootViewController.view.frame
-
-	//			rect.origin = self.topViewBeginOrigin
-
-	//			rootViewController.view.frame = rect
-
-	//			//Animating content if needed (Bug ID: #204)
-	//			if self.layoutIfNeededOnUpdate {
-	//				//Animating content (Bug ID: #160)
-	//				rootViewController.view.setNeedsLayout()
-
-	//				rootViewController.view.layoutIfNeeded()
-
-	//			}
-	//		})
-	//       }
-
-	//	self.movedDistance = 0
-
-
-	//	if rootViewController.navigationController?.interactivePopGestureRecognizer?.state == .began {
-	//		self.rootViewControllerWhilePopGestureRecognizerActive = rootViewController
-
-	//		self.topViewBeginOriginWhilePopGestureRecognizerActive = self.topViewBeginOrigin
-
-	//	}
-
-	//	self.rootViewController = nil
-
-	//}
-
 	static void RestorePosition()
 	{
 		HasPendingAdjustRequest = false;
@@ -1388,10 +799,12 @@ internal static class KeyboardAutoManagerScroll
 
 		rootController = null;
 		TopViewBeginOrigin = InvalidPoint;
+		TextViewRect = null;
+		TextViewRectLocal = null;
 	}
 
 
-	static NSIndexPath? GetPreviousIndexPath (this UITableView tableView, NSIndexPath indexPath)
+	static NSIndexPath? GetPreviousIndexPath(this UITableView tableView, NSIndexPath indexPath)
 	{
 		var previousRow = indexPath.Row - 1;
 		var previousSection = indexPath.Section;
@@ -1427,14 +840,20 @@ internal static class KeyboardAutoManagerScroll
 			return null;
 	}
 
+	static void AddToolbarIfRequired ()
+	{
+
+	}
+
+
 	// Add toolbar if it is required to add on textFields and it's siblings.
 	//internal func addToolbarIfRequired()
 	//{
 
 	//	//Either there is no inputAccessoryView or if accessoryView is not appropriate for current situation(There is Previous/Next/Done toolbar).
 	//	guard let siblings = responderViews(), !siblings.isEmpty,
- //             let textField = textFieldView, textField.responds(to: #selector(setter: UITextField.inputAccessoryView)),
- //             (textField.inputAccessoryView == nil ||
+	//             let textField = textFieldView, textField.responds(to: #selector(setter: UITextField.inputAccessoryView)),
+	//             (textField.inputAccessoryView == nil ||
 	//			textField.inputAccessoryView?.tag == IQKeyboardManager.kIQPreviousNextButtonToolbarTag ||
 	//			textField.inputAccessoryView?.tag == IQKeyboardManager.kIQDoneButtonToolbarTag) else
 	//	{
@@ -1455,12 +874,12 @@ internal static class KeyboardAutoManagerScroll
 
 	//	if let doneBarButtonItemImage = toolbarDoneBarButtonItemImage {
 	//		rightConfiguration = IQBarButtonItemConfiguration(image: doneBarButtonItemImage, action: #selector(self.doneAction(_:)))
- //       } else if let doneBarButtonItemText = toolbarDoneBarButtonItemText {
+	//       } else if let doneBarButtonItemText = toolbarDoneBarButtonItemText {
 	//		rightConfiguration = IQBarButtonItemConfiguration(title: doneBarButtonItemText, action: #selector(self.doneAction(_:)))
- //       } else
+	//       } else
 	//	{
 	//		rightConfiguration = IQBarButtonItemConfiguration(barButtonSystemItem: .done, action: #selector(self.doneAction(_:)))
- //       }
+	//       }
 	//	rightConfiguration.accessibilityLabel = toolbarDoneBarButtonItemAccessibilityLabel ?? "Done"
 
 	//	//    If only one object is found, then adding only Done button.
@@ -1479,12 +898,12 @@ internal static class KeyboardAutoManagerScroll
 
 	//		if let doneBarButtonItemImage = toolbarPreviousBarButtonItemImage {
 	//			prevConfiguration = IQBarButtonItemConfiguration(image: doneBarButtonItemImage, action: #selector(self.previousAction(_:)))
- //           } else if let doneBarButtonItemText = toolbarPreviousBarButtonItemText {
+	//           } else if let doneBarButtonItemText = toolbarPreviousBarButtonItemText {
 	//			prevConfiguration = IQBarButtonItemConfiguration(title: doneBarButtonItemText, action: #selector(self.previousAction(_:)))
- //           } else
+	//           } else
 	//		{
 	//			prevConfiguration = IQBarButtonItemConfiguration(image: (UIImage.keyboardPreviousImage() ?? UIImage()), action: #selector(self.previousAction(_:)))
- //           }
+	//           }
 	//		prevConfiguration.accessibilityLabel = toolbarPreviousBarButtonItemAccessibilityLabel ?? "Previous"
 
 
@@ -1493,12 +912,12 @@ internal static class KeyboardAutoManagerScroll
 
 	//		if let doneBarButtonItemImage = toolbarNextBarButtonItemImage {
 	//			nextConfiguration = IQBarButtonItemConfiguration(image: doneBarButtonItemImage, action: #selector(self.nextAction(_:)))
- //           } else if let doneBarButtonItemText = toolbarNextBarButtonItemText {
+	//           } else if let doneBarButtonItemText = toolbarNextBarButtonItemText {
 	//			nextConfiguration = IQBarButtonItemConfiguration(title: doneBarButtonItemText, action: #selector(self.nextAction(_:)))
- //           } else
+	//           } else
 	//		{
 	//			nextConfiguration = IQBarButtonItemConfiguration(image: (UIImage.keyboardNextImage() ?? UIImage()), action: #selector(self.nextAction(_:)))
- //           }
+	//           }
 	//		nextConfiguration.accessibilityLabel = toolbarNextBarButtonItemAccessibilityLabel ?? "Next"
 
 

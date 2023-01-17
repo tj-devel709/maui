@@ -16,6 +16,7 @@ namespace Microsoft.Maui.Platform
 		{
 			_placeholderLabel = InitPlaceholderLabel();
 			Changed += OnChanged;
+			var t = this;
 		}
 
 		public MauiTextView(CGRect frame)
@@ -23,6 +24,7 @@ namespace Microsoft.Maui.Platform
 		{
 			_placeholderLabel = InitPlaceholderLabel();
 			Changed += OnChanged;
+			var t = this;   
 		}
 
 		public override void WillMoveToWindow(UIWindow? window)

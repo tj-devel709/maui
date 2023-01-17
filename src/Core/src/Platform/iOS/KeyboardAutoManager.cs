@@ -14,7 +14,7 @@ internal static class KeyboardAutoManager
 {
 	internal static void GoToNextResponderOrResign(UIView view, UIView? customSuperView = null)
 	{
-		if (!view.CheckIfEligible())
+		if (!view.CheckIfEligible(isUnchangeableReturnKey))
 		{
 			view.ResignFirstResponder();
 			return;
@@ -38,9 +38,10 @@ internal static class KeyboardAutoManager
 		view.ChangeFocusedView(nextField);
 	}
 
-	static bool CheckIfEligible(this UIView view)
+	static bool CheckIfEligible(this UIView view, bool isUnchangeableReturnKey)
 	{
-		if (view is UITextField field && field.ReturnKeyType == UIReturnKeyType.Next)
+		// have isUnchangeableReturnKey flag since EntryCells do not have a public property to change ReturnKeyType
+		if (view is UITextField field && (field.ReturnKeyType == UIReturnKeyType.Next || isUnchangeableReturnKey))
 			return true;
 		else if (view is UITextView)
 			return true;
