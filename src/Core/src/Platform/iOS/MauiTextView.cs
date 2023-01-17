@@ -15,6 +15,7 @@ namespace Microsoft.Maui.Platform
 		{
 			_placeholderLabel = InitPlaceholderLabel();
 			Changed += OnChanged;
+			var t = this;
 		}
 
 		public MauiTextView(CGRect frame)
@@ -22,6 +23,7 @@ namespace Microsoft.Maui.Platform
 		{
 			_placeholderLabel = InitPlaceholderLabel();
 			Changed += OnChanged;
+			var t = this;   
 		}
 
 		// Native Changed doesn't fire when the Text Property is set in code
