@@ -712,33 +712,133 @@ namespace Microsoft.Maui.Platform
 			return null;
 		}
 
-		// static field to hold value when propagating back out the recursion
-		static bool IsRtl = false;
+		//internal static UIView? FindNextView(this UIView view, UIView superView, Func<UIView, bool> isValidType)
+		//{
+		//	// calculate the original CGRect parameters once here instead of multiple times later
+		//	var originalRect = view.ConvertRectToView(view.Bounds, null);
+
+		//	var isRtl = false;
+		//	var foundBestSibling = false;
+		//	var nextField = superView.FindNextView(originalRect, null, ref isRtl, isValidType, ref foundBestSibling);
+
+		//	// wrap around to the top if we are at the end to mirror Xamarin.Forms behavior
+		//	foundBestSibling = false;
+		//	nextField ??= superView.FindNextView(new CGRect(float.MinValue, float.MinValue, 0, 0), null, ref isRtl, isValidType, ref foundBestSibling);
+
+		//	return nextField;
+		//}
+
+		//static UIView? FindNextView(this UIView view, CGRect originalRect, UIView? currentBest, bool isRtl, Func<UIView, bool> isValidType, ref bool foundBestSibling)
+		//{
+		//	if (foundBestSibling)
+		//		return currentBest;
+
+		//	isRtl |= view.SemanticContentAttribute == UISemanticContentAttribute.ForceRightToLeft;
+
+		//	foreach (var child in view.Subviews)
+		//	{
+		//		if (isValidType(child) && child.CanBecomeFirstResponder())
+		//		{
+		//			if (TryFindNewBestView(originalRect, currentBest, child, isRtl, out var newBest))
+		//			{
+		//				currentBest = newBest;
+		//			}
+		//		}
+
+		//		else if (child.Subviews.Length > 0 && !child.Hidden && child.Alpha > 0f)
+		//		{
+		//			var newBestChild = child.FindNextView(originalRect, currentBest, isRtl, isValidType, false);
+		//			if (newBestChild is not null && TryFindNewBestView(originalRect, currentBest, newBestChild, isRtl, out var newBest))
+		//				currentBest = newBest;
+		//		}
+		//	}
+
+		//	return currentBest;
+		//}
+
+		//static UIView? FindNextView(this UIView view, CGRect originalRect, UIView? currentBest, ref bool isRtl, Func<UIView, bool> isValidType, ref bool foundBestSibling)
+		//{
+		//	if (foundBestSibling)
+		//		return currentBest;
+
+		//	isRtl = view.SemanticContentAttribute == UISemanticContentAttribute.ForceRightToLeft;
+
+		//	foreach (var child in view.Subviews)
+		//	{
+		//		if (isValidType(child) && child.CanBecomeFirstResponder())
+		//		{
+		//			if (TryFindNewBestView(originalRect, currentBest, child, ref isRtl, out var newBest))
+		//			{
+		//				currentBest = newBest;
+		//			}
+		//		}
+
+		//		else if (child.Subviews.Length > 0 && !child.Hidden && child.Alpha > 0f)
+		//		{
+		//			var newBestChild = child.FindNextView(originalRect, currentBest, ref isRtl, isValidType, ref foundBestSibling);
+
+		//			////if (newBestChild is not null &&
+		//			////	child.SemanticContentAttribute != view.SemanticContentAttribute)
+		//			//if (newBestChild is not null)
+		//			//	//((isRtl && child.SemanticContentAttribute != UISemanticContentAttribute.ForceRightToLeft) ||
+		//			//	//(!isRtl && child.SemanticContentAttribute == UISemanticContentAttribute.ForceRightToLeft)))
+		//			//{
+		//			//	foundBestSibling = true;
+		//			//	return newBestChild;
+		//			//}
+
+		//			if (newBestChild is not null && TryFindNewBestView(originalRect, currentBest, newBestChild, ref isRtl, out var newBest))
+		//				currentBest = newBest;
+		//		}
+		//	}
+
+		//	// we probably should be doing the following steps
+		//	// recursing down and finding the best match inside the main elements
+		//	// flow direction.
+		//	// If we cannot find it inside the same flow direction, then pop out
+		//	// and look inside the next elements that are in different flow directions?
+
+		//	return currentBest;
+		//}
 
 		internal static UIView? FindNextView(this UIView view, UIView superView, Func<UIView, bool> isValidType)
 		{
 			// calculate the original CGRect parameters once here instead of multiple times later
-			var originalRect = view.ConvertRectToView(view.Bounds, null);
+			//var originalRect = view.ConvertRectToView(view.Bounds, null);
 
-			IsRtl = false;
-			var nextField = superView.FindNextView(originalRect, null, isValidType);
+			//var isRtl = false;
+			var originalRtl = view.SemanticContentAttribute == UISemanticContentAttribute.ForceRightToLeft;
+			var nextField = superView.FindNextView(view, null, originalRtl, isValidType, out var _);
 
 			// wrap around to the top if we are at the end to mirror Xamarin.Forms behavior
-			if (nextField is null)
-				nextField = superView.FindNextView(new CGRect(float.MinValue, float.MinValue, 0, 0), null, isValidType);
+			//foundBestSibling = false;
+			//nextField ??= superView.FindNextView(new UIView (new CGRect (double.MinValue, double.MinValue, 0, 0)), null, isValidType, out var _);
+
+			nextField ??= superView.FindNextView(null, null, originalRtl, isValidType, out var _);
 
 			return nextField;
 		}
 
-		static UIView? FindNextView(this UIView view, CGRect originalRect, UIView? currentBest, Func<UIView, bool> isValidType)
+		// first find the starting child and then decide on next based on parent and flow
+		static UIView? FindNextView(this UIView view, UIView? origView, UIView? currentBest, bool originalRtl, Func<UIView, bool> isValidType, out bool foundOrigView)
 		{
-			IsRtl |= view.SemanticContentAttribute == UISemanticContentAttribute.ForceRightToLeft;
+			var isRtl = view.SemanticContentAttribute == UISemanticContentAttribute.ForceRightToLeft;
+			foundOrigView = false;
+			UIView? viewWithOrig = null;
 
 			foreach (var child in view.Subviews)
 			{
+				if (child == origView)
+					foundOrigView = true;
+
+				if (child is UITextField t && (t.Text == "3" || t.Text == "4"))
+				{
+
+				}
+
 				if (isValidType(child) && child.CanBecomeFirstResponder())
 				{
-					if (TryFindNewBestView(originalRect, currentBest, child, out var newBest))
+					if (TryFindNewBestView(origView, currentBest, child, originalRtl, isRtl, out var newBest))
 					{
 						currentBest = newBest;
 					}
@@ -746,46 +846,149 @@ namespace Microsoft.Maui.Platform
 
 				else if (child.Subviews.Length > 0 && !child.Hidden && child.Alpha > 0f)
 				{
-					var newBestChild = child.FindNextView(originalRect, currentBest, isValidType);
-					if (newBestChild is not null && TryFindNewBestView(originalRect, currentBest, newBestChild, out var newBest))
+					var newBestChild = child.FindNextView(origView, currentBest, originalRtl, isValidType, out var childFoundOrigView);
+
+					if (childFoundOrigView)
+					{
+						foundOrigView = true;
+						viewWithOrig = newBestChild;
+					}
+
+
+					if (newBestChild is not null && TryFindNewBestView(origView, currentBest, newBestChild, originalRtl, isRtl, out var newBest))
+					{
+						Console.WriteLine("!The above is the propogating up now!");
 						currentBest = newBest;
+					}
 				}
+			}
+
+			// if one of the children has a path containing the original view
+			if (foundOrigView)
+			{
+				// pass up the option that had a child containing the original view
+				if (viewWithOrig is not null)
+					return viewWithOrig;
+
+				// else return the best option from the other children in case currentBest is null
+				else
+					return currentBest;
 			}
 
 			return currentBest;
 		}
 
-		static bool TryFindNewBestView(CGRect originalRect, UIView? currentBest, UIView newView, out UIView newBest)
+		static bool TryFindNewBestView(UIView? origView, UIView? currentBest, UIView newView, bool originalRtl, bool isRtl, out UIView newBest)
 		{
+			if (origView is null)
+			{
+
+			}
+
+			var originalRect = origView?.ConvertRectToView(origView.Bounds, null);
 			var currentBestRect = currentBest?.ConvertRectToView(currentBest.Bounds, null);
 			var newViewRect = newView.ConvertRectToView(newView.Bounds, null);
 
 			var cbrValue = currentBestRect.GetValueOrDefault();
+			var originalValue = originalRect.GetValueOrDefault();
 			newBest = newView;
 
-			if (originalRect.Top < newViewRect.Top &&
+			// Debugging bit here
+			var cb = currentBest as UITextField;
+			var nv = newView as UITextField;
+			var cbText = cb?.Text;
+			var nvText = nv?.Text;
+
+			if (newView is UITextField t && currentBest is UITextField c && t.Text == "5" && c.Text != "5")
+			{
+
+			}
+
+			if (newView is UITextField t2 && currentBest is null && t2.Text == "5")
+			{
+
+			}
+
+			if (newView is UITextField t1 && t1.Text == "3")
+			{
+
+			}
+
+			//if (currentBest is not null && origView is not null && originalValue.Top == newViewRect.Top && cbrValue.Top > originalValue.Top)
+			//{
+			//	if (isRtl && originalValue.Right > newViewRect.Right)
+			//	{
+			//		return true;
+			//	}
+
+			//	else if (originalValue.Left < newViewRect.Left)
+			//		return true;
+			//}
+
+
+			if (currentBestRect is not null && newViewRect.Top > cbrValue.Top)
+			{
+				if (origView is null)
+				{
+					Console.WriteLine($"NewView: {nvText ?? "null"} Not REPLACED BY CurrentBest: {cbText ?? "null"} at 1 - isRTL: {isRtl}");
+				}
+				return false;
+			}
+
+			
+
+			else if ((originalRect is null || originalValue.Top < newViewRect.Top) &&
 				(currentBestRect is null || newViewRect.Top < cbrValue.Top))
 			{
+				if (origView is null)
+				{
+					Console.WriteLine($"NewView: {nvText ?? "null"} -> CurrentBest: {cbText ?? "null"} at 2 - isRTL: {isRtl}");
+				}
+
 				return true;
 			}
 
-			else if (IsRtl)
+			else if (isRtl)
 			{
-				if (originalRect.Top == newViewRect.Top &&
-					 originalRect.Right > newViewRect.Right &&
+				// we need to cover the situation where currentBestRect is null
+				// but the current view is ltr and the newview is rtl.
+				// In this case, the newview can be to the right of the current one
+				// and still technically be in the right direction according to the parent
+				//
+				// we could take either the original view's rtl
+				// or we could take the parents rtl
+
+				// using the origin view's rtl -> if (currentBestRect is null && parentsRtl != isRtl && 
+
+				if ((originalRect is null || (originalValue.Top == newViewRect.Top &&
+					 (originalValue.Right > newViewRect.Right || originalRtl != isRtl))) &&
+					 //originalValue.Right > newViewRect.Right)) &&
 					 (currentBestRect is null || newViewRect.Right > cbrValue.Right))
 				{
+					if (origView is null)
+					{
+						Console.WriteLine($"NewView: {nvText ?? "null"} -> CurrentBest: {cbText ?? "null"} at 3 - isRTL: {isRtl}");
+					}
 					return true;
 				}
 			}
 
-			else if (originalRect.Top == newViewRect.Top &&
-					 originalRect.Left < newViewRect.Left &&
+			else if ((originalRect is null || (originalValue.Top == newViewRect.Top &&
+					 originalValue.Left < newViewRect.Left)) &&
+					 //(originalValue.Left < newViewRect.Left || originalRtl != isRtl))) &&
 					 (currentBestRect is null || newViewRect.Left < cbrValue.Left))
 			{
+				if (origView is null)
+				{
+					Console.WriteLine($"NewView: {nvText ?? "null"} -> CurrentBest: {cbText ?? "null"} at 4 - isRTL: {isRtl}");
+				}
 				return true;
 			}
 
+			if (origView is null)
+			{
+				Console.WriteLine($"NewView: {nvText ?? "null"} Not REPLACED BY CurrentBest: {cbText ?? "null"} at 5 - isRTL: {isRtl}");
+			}
 			return false;
 		}
 
