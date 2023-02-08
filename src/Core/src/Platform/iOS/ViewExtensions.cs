@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
+using CoreAnimation;
 using CoreGraphics;
 using Foundation;
 using Microsoft.Maui.Devices;
@@ -238,7 +239,7 @@ namespace Microsoft.Maui.Platform
 				wrapperView.Border = border;
 		}
 
-		public static T? FindDescendantView<T>(this UIView view) where T : UIView
+		internal static T? FindDescendantView<T>(this UIView view, Func<T, bool> predicate) where T : UIView
 		{
 			var queue = new Queue<UIView>();
 			queue.Enqueue(view);
@@ -247,7 +248,7 @@ namespace Microsoft.Maui.Platform
 			{
 				var descendantView = queue.Dequeue();
 
-				if (descendantView is T result)
+				if (descendantView is T result && predicate.Invoke(result))
 					return result;
 
 				for (var i = 0; i < descendantView.Subviews?.Length; i++)
@@ -257,6 +258,9 @@ namespace Microsoft.Maui.Platform
 			return null;
 		}
 
+		public static T? FindDescendantView<T>(this UIView view) where T : UIView =>
+			FindDescendantView<T>(view, (_) => true);
+
 		public static void UpdateBackgroundLayerFrame(this UIView view)
 		{
 			if (view == null || view.Frame.IsEmpty)
@@ -264,16 +268,23 @@ namespace Microsoft.Maui.Platform
 
 			var layer = view.Layer;
 
+			UpdateBackgroundLayerFrame(layer, view.Bounds);
+		}
+
+		static void UpdateBackgroundLayerFrame(CALayer layer, CGRect bounds)
+		{
 			if (layer == null || layer.Sublayers == null || layer.Sublayers.Length == 0)
 				return;
 
 			foreach (var sublayer in layer.Sublayers)
 			{
-				if (sublayer.Name == BackgroundLayerName && sublayer.Frame != view.Bounds)
+				if (sublayer.Name == BackgroundLayerName && sublayer.Frame != bounds)
 				{
-					sublayer.Frame = view.Bounds;
+					sublayer.Frame = bounds;
 					break;
 				}
+
+				UpdateBackgroundLayerFrame(sublayer, bounds);
 			}
 		}
 
@@ -481,6 +492,18 @@ namespace Microsoft.Maui.Platform
 			var rotation = CoreGraphics.CGAffineTransform.MakeRotation((nfloat)radians);
 			CGAffineTransform.CGRectApplyAffineTransform(nvb, rotation);
 			return new Rect(nvb.X, nvb.Y, nvb.Width, nvb.Height);
+		}
+
+		internal static Rect GetFrameRelativeTo(this UIView view, UIView relativeTo)
+		{
+			var viewWindowLocation = view.GetLocationOnScreen();
+			var relativeToLocation = relativeTo.GetLocationOnScreen();
+
+			return
+				new Rect(
+						new Point(viewWindowLocation.X - relativeToLocation.X, viewWindowLocation.Y - relativeToLocation.Y),
+						new Graphics.Size(view.Bounds.Width, view.Bounds.Height)
+					);
 		}
 
 		internal static UIView? GetParent(this UIView? view)
@@ -699,85 +722,56 @@ namespace Microsoft.Maui.Platform
 				layer.CornerRadius = stroke.CornerRadius;
 		}
 
-		internal static T? GetUIResponder<T>(this UIView view) where T : UIResponder
+		internal static T? FindResponder<T>(this UIView view) where T : UIResponder
 		{
 			var nextResponder = view as UIResponder;
 			while (nextResponder is not null)
 			{
 				nextResponder = nextResponder.NextResponder;
 
-				if (nextResponder is T viewController)
-					return viewController;
+				if (nextResponder is T responder)
+					return responder;
 			}
 			return null;
 		}
 
-		internal static UIView? FindNextView(this UIView view, UIView superView, Type[] requestedTypes)
+		internal static UIView? FindNextView(this UIView view, UIView superView, Func<UIView, bool> isValidType)
 		{
-			if (requestedTypes is null)
-				return null;
+			var passedOriginal = false;
 
-			// calculate the original CGRect parameters once here instead of multiple times later
-			var originalRect = view.ConvertRectToView(view.Bounds, null);
+			var nextView = superView.FindNextView(view, ref passedOriginal, isValidType);
 
-			var nextField = superView.SearchBestNextView(originalRect, null, requestedTypes);
-			return nextField;
+			// if we did not find the next view, try to find the first one
+			nextView ??= superView.FindNextView(null, ref passedOriginal, isValidType);
+
+			return nextView;
 		}
 
-		static UIView? SearchBestNextView(this UIView view, CGRect originalRect, UIView? currentBest, Type[] requestedTypes)
+		static UIView? FindNextView(this UIView view, UIView? origView, ref bool passedOriginal, Func<UIView, bool> isValidType)
 		{
 			foreach (var child in view.Subviews)
 			{
-				var inheritsType = false;
-
-				foreach (var t in requestedTypes)
+				if (isValidType(child))
 				{
-					if (child.GetType().IsSubclassOf(t) || child.GetType() == t)
-					{
-						inheritsType = true;
-						break;
-					}
-				}
+					if (origView is null)
+						return child;
 
-				if (inheritsType && child.CanBecomeFirstResponder())
-				{
-					if (TryFindNewBestView(originalRect, currentBest, child, out var newBest))
-						currentBest = newBest;
+					if (passedOriginal)
+						return child;
+
+					if (child == origView)
+						passedOriginal = true;
 				}
 
 				else if (child.Subviews.Length > 0 && !child.Hidden && child.Alpha > 0f)
 				{
-					var newBestChild = child.SearchBestNextView(originalRect, currentBest, requestedTypes);
-					if (newBestChild is not null && TryFindNewBestView(originalRect, currentBest, newBestChild, out var newBest))
-						currentBest = newBest;
+					var nextLevel = child.FindNextView(origView, ref passedOriginal, isValidType);
+					if (nextLevel is not null)
+						return nextLevel;
 				}
 			}
 
-			return currentBest;
-		}
-
-		static bool TryFindNewBestView(CGRect originalRect, UIView? currentBest, UIView newView, out UIView newBest)
-		{
-			var currentBestRect = currentBest?.ConvertRectToView(currentBest.Bounds, null);
-			var newViewRect = newView.ConvertRectToView(newView.Bounds, null);
-
-			var cbrValue = currentBestRect.GetValueOrDefault();
-			newBest = newView;
-
-			if (originalRect.Top < newViewRect.Top &&
-				(currentBestRect is null || newViewRect.Top < cbrValue.Top))
-			{
-				return true;
-			}
-
-			else if (originalRect.Top == newViewRect.Top &&
-					 originalRect.Left < newViewRect.Left &&
-					 (currentBestRect is null || newViewRect.Left < cbrValue.Left))
-			{
-				return true;
-			}
-
-			return false;
+			return null;
 		}
 
 		internal static void ChangeFocusedView(this UIView view, UIView? newView)
@@ -787,26 +781,6 @@ namespace Microsoft.Maui.Platform
 
 			else
 				newView.BecomeFirstResponder();
-		}
-
-		static bool CanBecomeFirstResponder(this UIView view)
-		{
-			var isFirstResponder = false;
-
-			switch (view)
-			{
-				case UITextView tview:
-					isFirstResponder = tview.Editable;
-					break;
-				case UITextField field:
-					isFirstResponder = field.Enabled;
-					break;
-				// add in other control enabled properties here as necessary
-				default:
-					break;
-			}
-
-			return isFirstResponder && !view.Hidden && view.Alpha != 0f;
 		}
 	}
 }

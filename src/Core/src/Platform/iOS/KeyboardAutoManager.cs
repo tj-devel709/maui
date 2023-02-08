@@ -12,29 +12,35 @@ namespace Microsoft.Maui.Platform;
 
 internal static class KeyboardAutoManager
 {
-	internal static void GoToNextResponderOrResign(UIView view, bool isUnchangeableReturnKey = false, UIView? customSuperView = null)
+	internal static void GoToNextResponderOrResign(UIView view, UIView? customSuperView = null)
 	{
-		if (!view.CheckIfEligible(isUnchangeableReturnKey))
+		if (!view.CheckIfEligible())
 		{
 			view.ResignFirstResponder();
 			return;
 		}
 
-		var superview = customSuperView ?? view.GetUIResponder<ContainerViewController>()?.View;
+		var superview = customSuperView ?? view.FindResponder<ContainerViewController>()?.View;
 		if (superview is null)
 		{
 			view.ResignFirstResponder();
 			return;
 		}
 
-		var nextField = view.FindNextView(superview, new Type[] { typeof(UITextView), typeof(UITextField) });
+		var nextField = view.FindNextView(superview, view =>
+		{
+			var isValidTextView = view is UITextView textView && textView.Editable;
+			var isValidTextField = view is UITextField textField && textField.Enabled;
+
+			return (isValidTextView || isValidTextField) && !view.Hidden && view.Alpha != 0f;
+		});
+
 		view.ChangeFocusedView(nextField);
 	}
 
-	static bool CheckIfEligible(this UIView view, bool isUnchangeableReturnKey)
+	static bool CheckIfEligible(this UIView view)
 	{
-		// have isUnchangeableReturnKey flag since EntryCells do not have a public property to change ReturnKeyType
-		if (view is UITextField field && (field.ReturnKeyType == UIReturnKeyType.Next || isUnchangeableReturnKey))
+		if (view is UITextField field && field.ReturnKeyType == UIReturnKeyType.Next)
 			return true;
 		else if (view is UITextView)
 			return true;
