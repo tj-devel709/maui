@@ -82,21 +82,23 @@ internal static class KeyboardAutoManagerScroll
 				await Task.Delay(5);
 
 				var v = view as UITextView;
-				nint cursorPosition;
+				//nint cursorPosition;
 				if (v is UITextView vt)
 				{
 					// the selected text is not always updated when view takes focus
 					var selectedTextRange = vt.SelectedTextRange;
 					if (selectedTextRange is UITextRange selectedRange)
 					{
-						cursorPosition = vt.GetOffsetFromPosition(vt.BeginningOfDocument, selectedRange.Start);
+						//cursorPosition = vt.GetOffsetFromPosition(vt.BeginningOfDocument, selectedRange.Start);
 						//var realSelection = vt.GetTextRange(selectedRange.Start, vt.GetPosition(selectedRange, 1));
-						var rect = vt.GetFirstRectForRange(selectedRange);
-						var rect2 = vt.GetCaretRectForPosition(selectedRange.Start);
-						var newrect = vt.ConvertRectToView(rect, null);
-						var newrect2 = vt.ConvertRectToView(rect2, null);
-						TextViewRect = newrect2;
-						TextViewRectLocal = rect2;
+						//var rect = vt.GetFirstRectForRange(selectedRange);
+						//var rect2 = vt.GetCaretRectForPosition(selectedRange.Start);
+						//var newrect = vt.ConvertRectToView(rect, null);
+						//var newrect2 = vt.ConvertRectToView(rect2, null);
+						//TextViewRect = newrect2;
+						//TextViewRectLocal = rect2;
+						TextViewRectLocal = vt.GetCaretRectForPosition(selectedRange.Start);
+
 					}
 				}
 
@@ -327,8 +329,9 @@ internal static class KeyboardAutoManagerScroll
 		// if move is negative, the textField is not blocked by the keyboard
 		nfloat move;
 
-		var m1 = viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide;
-		var m2 = (nfloat)Math.Min(viewRectInRootSuperviewMinY - topLayoutGuide, viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide);
+		// Debugging
+		//var m1 = viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide;
+		//var m2 = (nfloat)Math.Min(viewRectInRootSuperviewMinY - topLayoutGuide, viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide);
 
 		// if the TextView is not scrollable, scroll to the bottom of the part of the view
 		if (isNonScrollableTextView)
@@ -336,8 +339,10 @@ internal static class KeyboardAutoManagerScroll
 		else
 			move = (nfloat)Math.Min(viewRectInRootSuperviewMinY - topLayoutGuide, viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide);
 
+		Console.WriteLine($"\n\n\n\n\n!!Starting!!");
+		Console.WriteLine($"Initial move calculated: {move}");
 
-		// If our textfield/textview's superview is a UIScrollView, save it
+		// Find the next highest scroll view
 
 		UIScrollView? superScrollView = null;
 		var superView = view.FindResponder<UIScrollView>();
@@ -352,6 +357,7 @@ internal static class KeyboardAutoManagerScroll
 			superView = superView.FindResponder<UIScrollView>();
 		}
 
+		// This is the case when the keyboard is already up and we click another editor/entry
 		if (LastScrollView is not null)
 		{
 			// if there is not a current superScrollView, restore LastScrollView
@@ -359,6 +365,7 @@ internal static class KeyboardAutoManagerScroll
 			{
 				if (LastScrollView.ContentInset != StartingContentInsets)
 				{
+					Console.WriteLine($"!!!ANIMATING SOMETHING #1!!!");
 					UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
 					{
 						LastScrollView.ContentInset = StartingContentInsets;
@@ -388,6 +395,7 @@ internal static class KeyboardAutoManagerScroll
 				{
 					UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
 					{
+						Console.WriteLine($"!!!ANIMATING SOMETHING #2!!!");
 						LastScrollView.ContentInset = StartingContentInsets;
 						LastScrollView.ScrollIndicatorInsets = StartingScrollIndicatorInsets;
 					}, () => { });
@@ -434,14 +442,24 @@ internal static class KeyboardAutoManagerScroll
 		{
 			var lastView = view;
 			superScrollView = LastScrollView;
+			nfloat innerScrollValue = 0;
+
+			var debuggingIteration = 1;
 
 			while (superScrollView is not null)
 			{
+				Console.WriteLine($"Starting Iteration #{debuggingIteration}");
+				Console.WriteLine($"superScrollView: {superScrollView}");
+				Console.WriteLine($"LastScrollView: {LastScrollView}");
+
 				var shouldContinue = false;
+
+				Console.WriteLine($"move: {move}");
 
 				if (move > 0)
 				{
 					shouldContinue = move > -superScrollView.ContentOffset.Y - superScrollView.ContentInset.Top;
+					Console.WriteLine($"shouldContinue: {shouldContinue}");
 				}
 
 				else if (superScrollView.FindResponder<UITableView>() is UITableView tableView)
@@ -459,6 +477,8 @@ internal static class KeyboardAutoManagerScroll
 							move = (nfloat)Math.Min(0, previousCellRectInRootSuperview.GetMaxY() - topLayoutGuide);
 						}
 					}
+					Console.WriteLine($"Entered is TableView and move == 0");
+					Console.WriteLine($"shouldContinue: {shouldContinue}");
 				}
 
 				else if (superScrollView.FindResponder<UICollectionView>() is UICollectionView collectionView)
@@ -478,6 +498,9 @@ internal static class KeyboardAutoManagerScroll
 							move = (nfloat)Math.Min(0, previousCellRectInRootSuperview.GetMaxY() - topLayoutGuide);
 						}
 					}
+
+					Console.WriteLine($"Entered is CollectionView and move == 0");
+					Console.WriteLine($"shouldContinue: {shouldContinue}");
 				}
 
 				else
@@ -488,6 +511,9 @@ internal static class KeyboardAutoManagerScroll
 
 						if (shouldContinue)
 							move = (nfloat)Math.Min(0, viewRectInWindowMaxY - visibleHeight + bottomLayoutGuide);
+
+						Console.WriteLine($"Entered is isNonScrollableTextView and new move is: {move}");
+						Console.WriteLine($"shouldContinue: {shouldContinue}");
 					}
 					else
 					{
@@ -495,16 +521,21 @@ internal static class KeyboardAutoManagerScroll
 
 						if (shouldContinue)
 							move = (nfloat)Math.Min(0, viewRectInRootSuperviewMinY - topLayoutGuide);
+
+						Console.WriteLine($"Entered is NOT isNonScrollableTextView and new move is: {move}");
+						Console.WriteLine($"shouldContinue: {shouldContinue}");
 					}
 				}
 
 				// Go up the hierarchy and look for other scrollViews until we reach the UIWindow
 				if (shouldContinue)
 				{
-					var tempScrollView = superScrollView.FindResponder<UIScrollView>() as UIScrollView;
+					var tempScrollView = superScrollView.FindResponder<UIScrollView>();
 					UIScrollView? nextScrollView = null;
 
-					// set tempScrollView to highest scrollable superview of superScrollView
+					Console.WriteLine($"tempScrollView: {tempScrollView}");
+
+					// set tempScrollView to next scrollable superview of superScrollView
 					while (tempScrollView is not null)
 					{
 						if (tempScrollView.ScrollEnabled && !ShouldIgnoreScrollingAdjustment)
@@ -512,18 +543,23 @@ internal static class KeyboardAutoManagerScroll
 							nextScrollView = tempScrollView;
 							break;
 						}
-						tempScrollView = tempScrollView.FindResponder<UIScrollView>() as UIScrollView;
+						tempScrollView = tempScrollView.FindResponder<UIScrollView>();
 					}
+
+					Console.WriteLine($"nextScrollView: {nextScrollView}");
 
 					// Get the lastViewRect
 					if (lastView.Superview.ConvertRectToView(lastView.Frame, superScrollView) is CGRect lastViewRect)
 					{
 						var shouldOffsetY = superScrollView.ContentOffset.Y - Math.Min(superScrollView.ContentOffset.Y, -move);
+						Console.WriteLine($"shouldOffsetY Before: {shouldOffsetY}");
 
 						if (isNonScrollableTextView)
 							shouldOffsetY = Math.Min(shouldOffsetY, lastViewRect.GetMaxY() - visibleHeight + bottomLayoutGuide);
 						else
 							shouldOffsetY = Math.Min(shouldOffsetY, lastViewRect.GetMinY());
+
+						Console.WriteLine($"shouldOffsetY After: {shouldOffsetY}");
 
 						if (isTextView && !isNonScrollableTextView && nextScrollView is null && shouldOffsetY >= 0)
 						{
@@ -535,43 +571,77 @@ internal static class KeyboardAutoManagerScroll
 
 								shouldOffsetY = Math.Min(shouldOffsetY, superScrollView.ContentOffset.Y + expectedFixDistance);
 
-								// no need to move now, contentInset will handle the moving logic
+								// no need to move now, contentOffset will handle the moving logic
 								move = 0;
+
+								Console.WriteLine($"isTextView, move is now == 0, shouldOffetY: {shouldOffsetY}");
 							}
 							else
 							{
 								// the contentOffset.Y will change to shouldOffSetY so we can subtract the difference from the move
 								move -= (nfloat)(shouldOffsetY - superScrollView.ContentOffset.Y);
+
+								Console.WriteLine($"isTextView #2, move is now == 0, shouldOffetY: {shouldOffsetY}");
 							}
 						}
 
 						else
 						{
-							// the contentOffset.Y will change to shouldOffSetY so we can subtract the difference from the move
+							// the superScrollView will use shouldOffsetY in it's offset, so we can remove it from the move distance
 							move -= (nfloat)(shouldOffsetY - superScrollView.ContentOffset.Y);
+
+							Console.WriteLine($"not TextView with other conditions met, move is now: {move}");
+							Console.WriteLine($"superScrollView.ContentOffset.Y: {superScrollView.ContentOffset.Y}");
+							Console.WriteLine($"shouldOffsetY: {shouldOffsetY}");
 						}
 
 						var newContentOffset = new CGPoint(superScrollView.ContentOffset.X, shouldOffsetY);
 
+						Console.WriteLine($"newContentOffset: {newContentOffset}");
+						Console.WriteLine($"superScrollView.ContentOffset: {superScrollView.ContentOffset}");
+
 						if (!superScrollView.ContentOffset.Equals(newContentOffset))
 						{
-							UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
+							if (nextScrollView is null)
 							{
-								if (view.FindResponder<UIStackView>() is UIStackView)
-									superScrollView.SetContentOffset(newContentOffset, UIView.AnimationsEnabled);
-								else
-									superScrollView.ContentOffset = newContentOffset;
-							}, () =>
-							{
-								if (superScrollView is UITableView || superScrollView is UICollectionView)
+								UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
 								{
-									AddToolbarIfRequired();
-								}
-							});
+									Console.WriteLine($"!!!ANIMATING SOMETHING #3!!!");
+									newContentOffset.Y += innerScrollValue;
+
+									Console.WriteLine($"nextScrollView is null and we are changing the superScrollView offset to: {newContentOffset}");
+									Console.WriteLine($"innerScrollValue: {innerScrollValue}");
+
+									if (view.FindResponder<UIStackView>() is UIStackView)
+										superScrollView.SetContentOffset(newContentOffset, UIView.AnimationsEnabled);
+									else
+										superScrollView.ContentOffset = newContentOffset;
+								}, () =>
+								{
+									if (superScrollView is UITableView || superScrollView is UICollectionView)
+									{
+										AddToolbarIfRequired();
+									}
+								});
+							}
+
+							else
+							{
+
+								//move += newContentOffset.Y;
+								innerScrollValue += newContentOffset.Y;
+								Console.WriteLine($"nextScrollView is not null and innerScrollValue: {innerScrollValue}");
+
+							}
 						}
 					}
 					lastView = superScrollView;
 					superScrollView = nextScrollView;
+
+					Console.WriteLine($"lastView: {lastView}");
+					Console.WriteLine($"superScrollView: {superScrollView}");
+					debuggingIteration++;
+					Console.WriteLine("\n\n");
 				}
 
 				else
@@ -581,10 +651,14 @@ internal static class KeyboardAutoManagerScroll
 				}
 			}
 
+			// What exactly is this block below doing?
+			// No noticable negative difference without applying the animation here
+
+			// maybe this is handling scrolling the LastScrollView if we don't need to scroll parents? 
 			if (LastScrollView.Superview.ConvertRectToView(LastScrollView.Frame, window) is CGRect lastScrollViewRect
 				&& !ShouldIgnoreContentInsetAdjustment)
 			{
-				var bottomInset = kbSize.Height - window.Frame.Height - lastScrollViewRect.GetMaxY();
+				var bottomInset = kbSize.Height - window.Frame.Height + lastScrollViewRect.GetMaxY();
 				var bottomScrollIndicatorInset = bottomInset - specialKeyboardDistanceFromTextField;
 
 				// update insets in case the offset is near the bottom on the scroll view
@@ -600,22 +674,29 @@ internal static class KeyboardAutoManagerScroll
 				var movedInsets = LastScrollView.ContentInset;
 				movedInsets.Bottom = bottomInset;
 
-				if (LastScrollView.ContentInset != movedInsets)
-				{
-					UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
-					{
-						LastScrollView.ContentInset = movedInsets;
-						UIEdgeInsets newScrollIndicatorInsets;
+				//if (LastScrollView.ContentInset != movedInsets)
+				//{
+				//	UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
+				//	{
+				//		Console.WriteLine($"!!!ANIMATING SOMETHING #6!!!");
+				//		Console.WriteLine($"Before - LastScrollView.ContentInset: {LastScrollView.ContentInset}");
+				//		LastScrollView.ContentInset = movedInsets;
+				//		Console.WriteLine($"After - LastScrollView.ContentInset: {LastScrollView.ContentInset}");
 
-						if (OperatingSystem.IsIOSVersionAtLeast(11, 0))
-							newScrollIndicatorInsets = LastScrollView.VerticalScrollIndicatorInsets;
-						else
-							newScrollIndicatorInsets = LastScrollView.ScrollIndicatorInsets;
+				//		UIEdgeInsets newScrollIndicatorInsets;
 
-						newScrollIndicatorInsets.Bottom = bottomScrollIndicatorInset;
-						LastScrollView.ScrollIndicatorInsets = newScrollIndicatorInsets;
-					}, () => { });
-				}
+				//		if (OperatingSystem.IsIOSVersionAtLeast(11, 0))
+				//			newScrollIndicatorInsets = LastScrollView.VerticalScrollIndicatorInsets;
+				//		else
+				//			newScrollIndicatorInsets = LastScrollView.ScrollIndicatorInsets;
+
+				//		newScrollIndicatorInsets.Bottom = bottomScrollIndicatorInset;
+				//		Console.WriteLine($"newScrollIndicatorInsets: {newScrollIndicatorInsets}");
+
+				//		LastScrollView.ScrollIndicatorInsets = newScrollIndicatorInsets;
+
+				//	}, () => { });
+				//}
 			}
 		}
 
@@ -728,10 +809,17 @@ internal static class KeyboardAutoManagerScroll
 
 		if (move >= 0)
 		{
+			Console.WriteLine($"\n\n Last Section - positive or zero move");
+			Console.WriteLine($"old rootViewOrigin.Y: {rootViewOrigin.Y}");
+
 			rootViewOrigin.Y = (nfloat)Math.Max(rootViewOrigin.Y - move, Math.Min(0, -kbSize.Height + specialKeyboardDistanceFromTextField));
+			Console.WriteLine($"move: {move}");
+			Console.WriteLine($"new rootViewOrigin.Y: {rootViewOrigin.Y}");
+
 
 			if (rootController.Frame.X != rootViewOrigin.X || rootController.Frame.Y != rootViewOrigin.Y)
 			{
+				Console.WriteLine($"!!!ANIMATING SOMETHING #4!!!");
 				UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
 				{
 					var rect = rootController.Frame;
@@ -759,12 +847,21 @@ internal static class KeyboardAutoManagerScroll
 			// if distburbDistance is positive - frame is not disturbed
 			var disturbDistance = rootViewOrigin.Y - TopViewBeginOrigin.Y;
 
+			Console.WriteLine($"\n\n Last Section - positive or zero move");
+			Console.WriteLine($"rootViewOrigin.Y: {rootViewOrigin.Y}");
+			Console.WriteLine($"TopViewBeginOrigin.Y: {TopViewBeginOrigin.Y}");
+			Console.WriteLine($"disturbDistance: {disturbDistance}");
+			Console.WriteLine($"move: {move}");
+
 			if (disturbDistance <= 0)
 			{
 				rootViewOrigin.Y -= (nfloat)Math.Max(move, disturbDistance);
 
+				Console.WriteLine($"rootViewOrigin.Y: {rootViewOrigin.Y}");
+
 				if (rootController.Frame.X != rootViewOrigin.X || rootController.Frame.Y != rootViewOrigin.Y)
 				{
+					Console.WriteLine($"!!!ANIMATING SOMETHING #5!!!");
 					UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
 					{
 						var rect = rootController.Frame;
