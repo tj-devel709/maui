@@ -102,16 +102,16 @@ namespace Microsoft.Maui.Controls.Handlers.Compatibility
 
 		void OnKeyboardHidden(object sender, UIKeyboardEventArgs args)
 		{
-			if (_shellScrollViewTracker == null || !_shellScrollViewTracker.Reset())
-				_setInsetAction(new UIEdgeInsets(0, 0, 0, 0));
+			//if (_shellScrollViewTracker == null || !_shellScrollViewTracker.Reset())
+			//	_setInsetAction(new UIEdgeInsets(0, 0, 0, 0));
 
-			_lastKeyboardRect = RectangleF.Empty;
+			//_lastKeyboardRect = RectangleF.Empty;
 		}
 
 		void OnKeyboardShown(object sender, UIKeyboardEventArgs args)
 		{
-			_lastKeyboardRect = args.FrameEnd;
-			UpdateInsets();
+			//_lastKeyboardRect = args.FrameEnd;
+			//UpdateInsets();
 		}
 	}
 }
