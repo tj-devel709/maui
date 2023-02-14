@@ -608,6 +608,7 @@ internal static class KeyboardAutoManagerScroll
 								{
 									Console.WriteLine($"!!!ANIMATING SOMETHING #3!!!");
 									newContentOffset.Y += innerScrollValue;
+									innerScrollValue = 0;
 
 									Console.WriteLine($"nextScrollView is null and we are changing the superScrollView offset to: {newContentOffset}");
 									Console.WriteLine($"innerScrollValue: {innerScrollValue}");
@@ -646,7 +647,8 @@ internal static class KeyboardAutoManagerScroll
 
 				else
 				{
-					move = 0;
+					//move = 0;
+					move = innerScrollValue;
 					break;
 				}
 			}
