@@ -6,6 +6,7 @@ using UIKit;
 using ObjCRuntime;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Microsoft.Maui.Platform;
 
@@ -54,13 +55,19 @@ internal static class KeyboardAutoManagerScroll
 	static CGRect? TextFieldRect = null;
 	static CGRect? TextFieldRectLocal = null;
 	static int TextViewTopDistance = 20;
+	static int debounceCount = 0;
+
+	
 
 
 	// Set up the observers for the keyboard and the UITextField/UITextView
 	internal static void Init()
 	{
+		//var semaphore = new Semaphore(1, 1);
+
 		TextFieldToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UITextFieldTextDidBeginEditingNotification"), async (notification) =>
 		{
+			Console.WriteLine($"entry observer started");
 			if (notification.Object is not null)
 			{
 				view = (UIView)notification.Object;
@@ -69,12 +76,15 @@ internal static class KeyboardAutoManagerScroll
 
 			RestoreRects();
 
+			//semaphore.WaitOne();
+
 			await Task.Delay(5);
+			//Thread.Sleep(5);
 
 			var v = view as UITextField;
 			if (v is UITextField vf)
 			{
-
+				Console.WriteLine("Cursor started being updated");
 				var selectedTextRange = vf.SelectedTextRange;
 				if (selectedTextRange is UITextRange selectedRange)
 				{
@@ -83,20 +93,33 @@ internal static class KeyboardAutoManagerScroll
 						TextFieldRect = vf.ConvertRectToView(local, null);
 				}
 
+				Console.WriteLine($"TextFieldRectLocal: {TextFieldRectLocal}");
+				Console.WriteLine($"TextFieldRect: {TextFieldRect}");
+
 				TextViewTopDistance = TextFieldRectLocal is CGRect cGRect ? 20 + (int)cGRect.Height : 20;
 
-				if (vf.InputAccessoryView is UIView accessory)
-				{
-					TextViewTopDistance += (int)accessory.Frame.Height;
-				}
+				Console.WriteLine($"TextViewTopDistance: {TextViewTopDistance}");
+				Console.WriteLine("Cursor finished being updated");
+				//if (vf.InputAccessoryView is UIView accessory)
+				//{
+				//	TextViewTopDistance += (int)accessory.Frame.Height;
+				//}
 			}
 
-			if (IsKeyboardShowing)
-				AdjustPosition();
+			//semaphore.Release();
+
+			//if (IsKeyboardShowing)
+			//	AdjustPosition();
+
+			Console.WriteLine($"entry calling AdjustPositionDebounce");
+			AdjustPositionDebounce();
+			Console.WriteLine($"entry finishing AdjustPositionDebounce");
 		});
 
 		TextViewToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UITextViewTextDidBeginEditingNotification"), async (notification) =>
 		{
+			Console.WriteLine("Editor started observer");
+
 			if (notification.Object is not null)
 			{
 				RestoreRects();
@@ -105,40 +128,64 @@ internal static class KeyboardAutoManagerScroll
 
 				rootController = view.FindResponder<ContainerViewController>()?.View;
 
+				//semaphore.WaitOne();
+
 				await Task.Delay(5);
+				//view.InvokeOnMainThread(() =>
+				//{
+					var v = view as UITextView;
 
-				var v = view as UITextView;
-
-				if (v is UITextView vt)
-				{
-
-					var selectedTextRange = vt.SelectedTextRange;
-					if (selectedTextRange is UITextRange selectedRange)
+					if (v is UITextView vt)
 					{
-						TextViewRectLocal = vt.GetCaretRectForPosition(selectedRange.Start);
-						if (TextViewRectLocal is CGRect local)
+						Console.WriteLine("Cursor started being updated");
+						var selectedTextRange = vt.SelectedTextRange;
+						if (selectedTextRange is UITextRange selectedRange)
 						{
-							TextViewRect = vt.ConvertRectToView(local, null);
+							TextViewRectLocal = vt.GetCaretRectForPosition(selectedRange.Start);
+							if (TextViewRectLocal is CGRect local)
+							{
+								TextViewRect = vt.ConvertRectToView(local, null);
+							}
+
+							Console.WriteLine($"TextViewRectLocal: {TextViewRectLocal}");
+							Console.WriteLine($"TextViewRect: {TextViewRect}");
+
 						}
 
+						TextViewTopDistance = TextViewRectLocal is CGRect cGRect ? 20 + (int)cGRect.Height : 20;
+						Console.WriteLine($"TextViewTopDistance: {TextViewTopDistance}");
+
+						//if (vt.InputAccessoryView is UIView accessory)
+						//{
+						//	TextViewTopDistance += (int)accessory.Frame.Height;
+						//}
+
+						Console.WriteLine("Cursor finished being updated");
 					}
 
+					//semaphore.Release();
 
-					TextViewTopDistance = TextViewRectLocal is CGRect cGRect ? 20 + (int)cGRect.Height : 20;
 
-					//if (vt.InputAccessoryView is UIView accessory)
+					//if (IsKeyboardShowing)
 					//{
-					//	TextViewTopDistance += (int)accessory.Frame.Height;
+					//	Console.WriteLine("Editor started calling AdjustPosition");
+					//	AdjustPosition();
+					//	Console.WriteLine("Editor finished calling AdjustPosition");
 					//}
-				}
 
-				if (IsKeyboardShowing)
-					AdjustPosition();
+					Console.WriteLine($"editor calling AdjustPositionDebounce");
+					AdjustPositionDebounce();
+					Console.WriteLine($"editor finishing AdjustPositionDebounce");
+				//});
+				
 			}
+
+			Console.WriteLine($"Editor finished observer\n\n\n\n\n\n\n");
 		});
 
-		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillShowNotification"), async (notification) =>
+		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillShowNotification"), (notification) =>
 		{
+			Console.WriteLine("Keyboard started observer");
 			NSObject? frameSize = null;
 			NSObject? curveSize = null;
 
@@ -160,12 +207,28 @@ internal static class KeyboardAutoManagerScroll
 			if (TopViewBeginOrigin == InvalidPoint && rootController is not null)
 				TopViewBeginOrigin = new CGPoint(rootController.Frame.X, rootController.Frame.Y);
 
+			//if (!IsKeyboardShowing)
+			//{
+			//	//await Task.Delay(1);
+			//	//semaphore.WaitOne();
+			//	Console.WriteLine("Keyboard started calling AdjustPosition");
+			//	AdjustPosition();
+			//	Console.WriteLine("Keyboard finished calling AdjustPosition");
+			//	//semaphore.Release();
+			//	IsKeyboardShowing = true;
+			//}
+
+			Console.WriteLine($"Keyboard calling AdjustPositionDebounce");
+			AdjustPositionDebounce();
+			Console.WriteLine($"keyboard finishing AdjustPositionDebounce");
+
 			if (!IsKeyboardShowing)
 			{
-				await Task.Delay(1);
-				AdjustPosition();
+				Console.WriteLine($"Keyboard setting IsKeyboardShowing - true");
 				IsKeyboardShowing = true;
 			}
+
+			Console.WriteLine($"Keyboard finished observer\n\n\n\n\n\n\n");
 		});
 
 		DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillHideNotification"), (notification) =>
@@ -284,8 +347,28 @@ internal static class KeyboardAutoManagerScroll
 			NSNotificationCenter.DefaultCenter.RemoveObserver(TextViewToken);
 	}
 
+	internal static async void AdjustPositionDebounce()
+	{
+		debounceCount++;
+		var entranceCount = debounceCount;
+
+		await Task.Delay(10);
+
+		if (entranceCount == debounceCount)
+		{
+			Console.WriteLine($"Calling AdjustPosition in Debounce - entranceCount-{entranceCount} | debounceCount-{debounceCount}");
+			AdjustPosition();
+			debounceCount = 0;
+		}
+		else
+		{
+			Console.WriteLine($"Did not adjust Position in Debounce - entranceCount-{entranceCount} | debounceCount-{debounceCount}");
+		}
+	}
+
 	internal static void AdjustPosition()
 	{
+		Console.WriteLine("AdjustPosition Started");
 		if (view is not UITextField field && view is not UITextView)
 			return;
 
@@ -356,8 +439,10 @@ internal static class KeyboardAutoManagerScroll
 
 		//if (viewRect is CGRect vRect && vRect.Y >= topLayoutGuide && vRect.Y < keyboardYPosition - TextViewTopDistance)
 		if (viewRect is CGRect vRect && vRect.Y >= topLayoutGuide && vRect.Y < keyboardYPosition)
+		{
+			Console.WriteLine("returning the adjustposition since we are in visible area");
 			return;
-
+		}
 		//if (TextViewRect is CGRect viewRect1 && viewRect1.Y < keyboardYPosition)
 		//	return;
 
@@ -790,55 +875,57 @@ internal static class KeyboardAutoManagerScroll
 			// What exactly is this block below doing?
 			// No noticable negative difference without applying the animation here
 
-			// maybe this is handling scrolling the LastScrollView if we don't need to scroll parents? 
-			if (LastScrollView.Superview.ConvertRectToView(LastScrollView.Frame, window) is CGRect lastScrollViewRect
-				&& !ShouldIgnoreContentInsetAdjustment)
-			{
-				var bottomInset = kbSize.Height - window.Frame.Height + lastScrollViewRect.GetMaxY();
-				var bottomScrollIndicatorInset = bottomInset - specialKeyboardDistanceFromTextField;
+			// maybe this is handling scrolling the LastScrollView if we don't need to scroll parents?
 
-				// update insets in case the offset is near the bottom on the scroll view
-				bottomInset = (nfloat)Math.Max(StartingContentInsets.Bottom, bottomInset);
-				bottomScrollIndicatorInset = (nfloat)Math.Max(StartingScrollIndicatorInsets.Bottom, bottomScrollIndicatorInset);
+			// severely overscrolls the inner scrollviews bottom cotent.inset - not neccessary at this point
+			//if (LastScrollView.Superview.ConvertRectToView(LastScrollView.Frame, window) is CGRect lastScrollViewRect
+			//	&& !ShouldIgnoreContentInsetAdjustment)
+			//{
+			//	var bottomInset = kbSize.Height - window.Frame.Height + lastScrollViewRect.GetMaxY();
+			//	var bottomScrollIndicatorInset = bottomInset - specialKeyboardDistanceFromTextField;
 
-				if (OperatingSystem.IsIOSVersionAtLeast(11, 0))
-				{
-					bottomInset -= LastScrollView.SafeAreaInsets.Bottom;
-					bottomScrollIndicatorInset -= LastScrollView.SafeAreaInsets.Bottom;
-				}
+			//	// update insets in case the offset is near the bottom on the scroll view
+			//	bottomInset = (nfloat)Math.Max(StartingContentInsets.Bottom, bottomInset);
+			//	bottomScrollIndicatorInset = (nfloat)Math.Max(StartingScrollIndicatorInsets.Bottom, bottomScrollIndicatorInset);
 
-				var movedInsets = LastScrollView.ContentInset;
-				movedInsets.Bottom = bottomInset;
+			//	if (OperatingSystem.IsIOSVersionAtLeast(11, 0))
+			//	{
+			//		bottomInset -= LastScrollView.SafeAreaInsets.Bottom;
+			//		bottomScrollIndicatorInset -= LastScrollView.SafeAreaInsets.Bottom;
+			//	}
 
-				Console.WriteLine($"LastScrollView.ContentInset: {LastScrollView.ContentInset}");
-				Console.WriteLine($"movedInsets.Bottom: {movedInsets.Bottom}");
-				Console.WriteLine($"Would have animated the LastScrollView.ContentInset.Bottom by {LastScrollView.ContentInset.Bottom - movedInsets.Bottom}");
+			//	var movedInsets = LastScrollView.ContentInset;
+			//	movedInsets.Bottom = bottomInset;
+
+			//	Console.WriteLine($"LastScrollView.ContentInset: {LastScrollView.ContentInset}");
+			//	Console.WriteLine($"movedInsets.Bottom: {movedInsets.Bottom}");
+			//	Console.WriteLine($"Would have animated the LastScrollView.ContentInset.Bottom by {LastScrollView.ContentInset.Bottom - movedInsets.Bottom}");
 
 
-				if (LastScrollView.ContentInset != movedInsets)
-				{
-					//UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
-					//{
-					//	Console.WriteLine($"!!!ANIMATING SOMETHING #6!!!");
-					//	Console.WriteLine($"Before - LastScrollView.ContentInset: {LastScrollView.ContentInset}");
-					//	LastScrollView.ContentInset = movedInsets;
-					//	Console.WriteLine($"After - LastScrollView.ContentInset: {LastScrollView.ContentInset}");
+			//	if (LastScrollView.ContentInset != movedInsets)
+			//	{
+			//		UIView.Animate(AnimationDuration, 0, AnimationCurve, () =>
+			//		{
+			//			Console.WriteLine($"!!!ANIMATING SOMETHING #6!!!");
+			//			Console.WriteLine($"Before - LastScrollView.ContentInset: {LastScrollView.ContentInset}");
+			//			LastScrollView.ContentInset = movedInsets;
+			//			Console.WriteLine($"After - LastScrollView.ContentInset: {LastScrollView.ContentInset}");
 
-					//	UIEdgeInsets newScrollIndicatorInsets;
+			//			UIEdgeInsets newScrollIndicatorInsets;
 
-					//	if (OperatingSystem.IsIOSVersionAtLeast(11, 0))
-					//		newScrollIndicatorInsets = LastScrollView.VerticalScrollIndicatorInsets;
-					//	else
-					//		newScrollIndicatorInsets = LastScrollView.ScrollIndicatorInsets;
+			//			if (OperatingSystem.IsIOSVersionAtLeast(11, 0))
+			//				newScrollIndicatorInsets = LastScrollView.VerticalScrollIndicatorInsets;
+			//			else
+			//				newScrollIndicatorInsets = LastScrollView.ScrollIndicatorInsets;
 
-					//	newScrollIndicatorInsets.Bottom = bottomScrollIndicatorInset;
-					//	Console.WriteLine($"newScrollIndicatorInsets: {newScrollIndicatorInsets}");
+			//			newScrollIndicatorInsets.Bottom = bottomScrollIndicatorInset;
+			//			Console.WriteLine($"newScrollIndicatorInsets: {newScrollIndicatorInsets}");
 
-					//	LastScrollView.ScrollIndicatorInsets = newScrollIndicatorInsets;
+			//			LastScrollView.ScrollIndicatorInsets = newScrollIndicatorInsets;
 
-					//}, () => { });
-				}
-			}
+			//		}, () => { });
+			//	}
+			//}
 		}
 
 		//// readjust contentInset when the textView height is too large for the screen
@@ -996,6 +1083,9 @@ internal static class KeyboardAutoManagerScroll
 
 		if (move >= 0)
 		{
+			Console.WriteLine($"SuperScrollView at the end: {superScrollView}");
+			Console.WriteLine($"LastScrollView at the end: {LastScrollView}");
+
 			Console.WriteLine($"\n\n Last Section - positive or zero move");
 			Console.WriteLine($"old rootViewOrigin.Y: {rootViewOrigin.Y}");
 
@@ -1031,6 +1121,9 @@ internal static class KeyboardAutoManagerScroll
 		// move is negative
 		else
 		{
+			Console.WriteLine($"SuperScrollView at the end: {superScrollView}");
+			Console.WriteLine($"LastScrollView at the end: {LastScrollView}");
+
 			// if distburbDistance is negative - frame is disturbed
 			// if distburbDistance is positive - frame is not disturbed
 			var disturbDistance = rootViewOrigin.Y - TopViewBeginOrigin.Y;
