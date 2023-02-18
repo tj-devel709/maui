@@ -54,7 +54,7 @@ internal static class KeyboardAutoManagerScroll
 			}
 		});
 
-		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillShowNotification"), (notification) =>
+		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillShowNotification"), async (notification) =>
 		{
 			NSObject? frameSize = null;
 			NSObject? curveSize = null;
@@ -77,10 +77,12 @@ internal static class KeyboardAutoManagerScroll
 			if (TopViewBeginOrigin == InvalidPoint && RootController is not null)
 				TopViewBeginOrigin = new CGPoint(RootController.Frame.X, RootController.Frame.Y);
 
-			AdjustPositionDebounce();
 
 			if (!IsKeyboardShowing)
+			{
+				await AdjustPositionDebounce();
 				IsKeyboardShowing = true;
+			}
 		});
 
 		DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillHideNotification"), (notification) =>
@@ -178,7 +180,7 @@ internal static class KeyboardAutoManagerScroll
 
 		TextViewTopDistance = localCursor is CGRect cGRect ? 20 + (int)cGRect.Height : 20;
 
-		AdjustPositionDebounce();
+		await AdjustPositionDebounce();
 	}
 
 	// used to get the numeric values from the UserInfo dictionary's NSObject value to CGRect
@@ -239,7 +241,7 @@ internal static class KeyboardAutoManagerScroll
 			NSNotificationCenter.DefaultCenter.RemoveObserver(TextViewToken);
 	}
 
-	internal static async void AdjustPositionDebounce()
+	internal static async Task AdjustPositionDebounce()
 	{
 		DebounceCount++;
 		var entranceCount = DebounceCount;
