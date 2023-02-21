@@ -2,9 +2,8 @@
 using CoreGraphics;
 using Foundation;
 using UIKit;
-using System.Text;
 using System.Threading.Tasks;
-using static SystemConfiguration.NetworkReachability;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.Maui.Platform;
 
@@ -77,7 +76,6 @@ internal static class KeyboardAutoManagerScroll
 			if (TopViewBeginOrigin == InvalidPoint && RootController is not null)
 				TopViewBeginOrigin = new CGPoint(RootController.Frame.X, RootController.Frame.Y);
 
-
 			if (!IsKeyboardShowing)
 			{
 				await AdjustPositionDebounce();
@@ -142,6 +140,40 @@ internal static class KeyboardAutoManagerScroll
 		});
 	}
 
+	internal static void Destroy()
+	{
+		if (WillShowToken is not null)
+			NSNotificationCenter.DefaultCenter.RemoveObserver(WillShowToken);
+		if (DidHideToken is not null)
+			NSNotificationCenter.DefaultCenter.RemoveObserver(DidHideToken);
+		if (TextFieldToken is not null)
+			NSNotificationCenter.DefaultCenter.RemoveObserver(TextFieldToken);
+		if (TextViewToken is not null)
+			NSNotificationCenter.DefaultCenter.RemoveObserver(TextViewToken);
+	}
+
+	// Used to get the numeric values from the UserInfo dictionary's NSObject value to CGRect.
+	// Doing manually since CGRectFromString is not yet bound
+	static CGRect? DescriptionToCGRect(string description)
+	{
+		// example of passed in description: "NSRect: {{0, 586}, {430, 346}}"
+
+		if (description is null)
+			return null;
+
+		// remove letters in all languages, spaces, and curly brackets
+		var temp = Regex.Replace(description, @"[\p{L}\s:{}]", "");
+		var dimensions = temp.Split(',');
+
+		if (int.TryParse(dimensions[0], out var x) && int.TryParse(dimensions[1], out var y)
+			&& int.TryParse(dimensions[2], out var width) && int.TryParse(dimensions[3], out var height))
+		{
+			return new CGRect(x, y, width, height);
+		}
+
+		return null;
+	}
+
 	static async Task SetUpTextEdit()
 	{
 		if (View is null)
@@ -183,64 +215,8 @@ internal static class KeyboardAutoManagerScroll
 		await AdjustPositionDebounce();
 	}
 
-	// used to get the numeric values from the UserInfo dictionary's NSObject value to CGRect
-	static CGRect? DescriptionToCGRect(string description)
-	{
-		if (description is null)
-			return null;
-
-		string one, two, three, four;
-		one = two = three = four = string.Empty;
-
-		var sb = new StringBuilder();
-		var isInNumber = false;
-		foreach (var c in description)
-		{
-			if (char.IsDigit(c))
-			{
-				sb.Append(c);
-				isInNumber = true;
-			}
-
-			else if (isInNumber && !char.IsDigit(c))
-			{
-				if (string.IsNullOrEmpty(one))
-					one = sb.ToString();
-				else if (string.IsNullOrEmpty(two))
-					two = sb.ToString();
-				else if (string.IsNullOrEmpty(three))
-					three = sb.ToString();
-				else if (string.IsNullOrEmpty(four))
-					four = sb.ToString();
-				else
-					break;
-
-				isInNumber = false;
-				sb.Clear();
-			}
-		}
-
-		if (int.TryParse(one, out var oneNum) && int.TryParse(two, out var twoNum)
-			&& int.TryParse(three, out var threeNum) && int.TryParse(four, out var fourNum))
-		{
-			return new CGRect(oneNum, twoNum, threeNum, fourNum);
-		}
-
-		return null;
-	}
-
-	internal static void Destroy()
-	{
-		if (WillShowToken is not null)
-			NSNotificationCenter.DefaultCenter.RemoveObserver(WillShowToken);
-		if (DidHideToken is not null)
-			NSNotificationCenter.DefaultCenter.RemoveObserver(DidHideToken);
-		if (TextFieldToken is not null)
-			NSNotificationCenter.DefaultCenter.RemoveObserver(TextFieldToken);
-		if (TextViewToken is not null)
-			NSNotificationCenter.DefaultCenter.RemoveObserver(TextViewToken);
-	}
-
+	// Used to debounce calls from different oberservers so we can be sure
+	// all the fields are updated before calling AdjustPostition()
 	internal static async Task AdjustPositionDebounce()
 	{
 		DebounceCount++;
@@ -264,15 +240,13 @@ internal static class KeyboardAutoManagerScroll
 		if (RootController is null)
 			return;
 
-		var rootFrame = RootController.Frame;
-		var rootViewOrigin = new CGPoint(rootFrame.GetMinX(), rootFrame.GetMinY());
+		var rootViewOrigin = new CGPoint(RootController.Frame.GetMinX(), RootController.Frame.GetMinY());
 		var window = RootController.Window;
 
 		var kbSize = KeyboardFrame.Size;
-		var kbFrame = KeyboardFrame;
-		var intersectRect = CGRect.Intersect(kbFrame, window.Frame);
+		var intersectRect = CGRect.Intersect(KeyboardFrame, window.Frame);
 		if (intersectRect == CGRect.Empty)
-			kbSize = new CGSize(kbFrame.Width, 0);
+			kbSize = new CGSize(KeyboardFrame.Width, 0);
 		else
 			kbSize = intersectRect.Size;
 
@@ -293,24 +267,13 @@ internal static class KeyboardAutoManagerScroll
 			navigationBarAreaHeight = statusBarHeight;
 		}
 
-		var layoutAreaHeight = RootController.LayoutMargins.Bottom;
-		var isTextView = false;
-
-		if (View is UIScrollView scrollView)
-			isTextView = true;
-
-		var topLayoutGuide = Math.Max(navigationBarAreaHeight, layoutAreaHeight) + 5;
-		var bottomLayoutGuide = isTextView ? 0 : RootController.LayoutMargins.Bottom;
-
-		// the height that will be above the keyboard
-		var visibleHeight = window.Frame.Height - kbSize.Height;
+		var topLayoutGuide = Math.Max(navigationBarAreaHeight, RootController.LayoutMargins.Bottom) + 5;
 
 		var keyboardYPosition = window.Frame.Height - kbSize.Height - TextViewTopDistance;
 
-		var cursorRectTemp = CursorRect;
 		CGRect cursorRect;
 
-		if (cursorRectTemp is CGRect cRect)
+		if (CursorRect is CGRect cRect)
 			cursorRect = cRect;
 		else
 			return;
@@ -319,9 +282,6 @@ internal static class KeyboardAutoManagerScroll
 		if (cursorRect.Y >= topLayoutGuide && cursorRect.Y < keyboardYPosition)
 			return;
 
-		var viewRectInWindowMaxY = View.Superview.ConvertRectToView(View.Frame, window).GetMaxY();
-		var viewRectInRootSuperviewMinY = View.Superview.ConvertRectToView(View.Frame, RootController.Superview).GetMinY();
-
 		nfloat move = 0;
 
 		// readjust contentInset when the textView height is too large for the screen
@@ -329,20 +289,13 @@ internal static class KeyboardAutoManagerScroll
 		if (RootController.Superview is UIView v)
 			rootSuperViewFrameInWindow = v.ConvertRectToView(v.Bounds, window);
 
-		var keyboardOverlapping = rootSuperViewFrameInWindow.GetMaxY() - keyboardYPosition;
-
-		var availableSpace = rootSuperViewFrameInWindow.Height - topLayoutGuide - keyboardOverlapping;
-
-		// how much of the textView can fit on the screen with the keyboard up
-		var textViewHeight = Math.Min(View.Frame.Height, availableSpace);
-
 		if (cursorRect.Y > keyboardYPosition)
 			move = cursorRect.Y - keyboardYPosition;
 
 		else if (cursorRect.Y <= topLayoutGuide)
 			move = cursorRect.Y - (nfloat)topLayoutGuide;
 
-		// Find the next highest scroll View
+		// Find the next parent ScrollView that is scrollable
 		UIScrollView? superScrollView = null;
 		var superView = View.FindResponder<UIScrollView>();
 		while (superView is not null)
@@ -386,7 +339,7 @@ internal static class KeyboardAutoManagerScroll
 			}
 
 			// if we have different LastScrollView and superScrollViews, set the LastScrollView to the original frame
-			// and set the superScrolView as the LastScrollView
+			// and set the LastScrollView as the superScrolView
 			else if (superScrollView != LastScrollView)
 			{
 				if (LastScrollView.ContentInset != StartingContentInsets)
@@ -434,14 +387,12 @@ internal static class KeyboardAutoManagerScroll
 				StartingScrollIndicatorInsets = superScrollView.ScrollIndicatorInsets;
 		}
 
-		// if we found a LastScrollView above, then set the contentOffset to see textField
+		// Calculate the move for the ScrollViews
 		if (LastScrollView is not null)
 		{
 			var lastView = View;
 			superScrollView = LastScrollView;
 			nfloat innerScrollValue = 0;
-
-			var debuggingIteration = 1;
 
 			while (superScrollView is not null)
 			{
@@ -502,7 +453,7 @@ internal static class KeyboardAutoManagerScroll
 				// Go up the hierarchy and look for other scrollViews until we reach the UIWindow
 				if (shouldContinue)
 				{
-					var tempScrollView = superScrollView.FindResponder<MauiScrollView>();
+					var tempScrollView = superScrollView.FindResponder<UIScrollView>();
 					UIScrollView? nextScrollView = null;
 
 					// set tempScrollView to next scrollable superview of superScrollView
@@ -513,7 +464,7 @@ internal static class KeyboardAutoManagerScroll
 							nextScrollView = tempScrollView;
 							break;
 						}
-						tempScrollView = tempScrollView.FindResponder<MauiScrollView>();
+						tempScrollView = tempScrollView.FindResponder<UIScrollView>();
 					}
 
 					var shouldOffsetY = superScrollView.ContentOffset.Y - Math.Min(superScrollView.ContentOffset.Y, -move);
@@ -532,7 +483,7 @@ internal static class KeyboardAutoManagerScroll
 								newContentOffset.Y += innerScrollValue;
 								innerScrollValue = 0;
 
-								if (View.FindResponder<UIStackView>() is UIStackView)
+								if (View.FindResponder<UIStackView>() is not null)
 									superScrollView.SetContentOffset(newContentOffset, UIView.AnimationsEnabled);
 								else
 									superScrollView.ContentOffset = newContentOffset;
@@ -541,17 +492,18 @@ internal static class KeyboardAutoManagerScroll
 
 						else
 						{
+							// add the amount we would have moved to the next scroll value
 							innerScrollValue += newContentOffset.Y;
 						}
 					}
 
 					lastView = superScrollView;
 					superScrollView = nextScrollView;
-					debuggingIteration++;
 				}
 
 				else
 				{
+					// if we did not get to scroll all the way, add the value to move
 					move += innerScrollValue;
 					break;
 				}
