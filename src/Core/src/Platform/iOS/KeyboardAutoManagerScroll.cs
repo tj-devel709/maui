@@ -278,7 +278,6 @@ internal static class KeyboardAutoManagerScroll
 		else
 			return;
 
-
 		if (cursorRect.Y >= topLayoutGuide && cursorRect.Y < keyboardYPosition)
 			return;
 
