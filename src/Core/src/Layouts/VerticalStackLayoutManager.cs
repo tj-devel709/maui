@@ -28,14 +28,14 @@ namespace Microsoft.Maui.Layouts
 				}
 
 				spacingCount += 1;
-				var measure = child.Measure(childWidthConstraint, double.PositiveInfinity);
+				var measure = child.Measure(childWidthConstraint, double.PositiveInfinity); // good 292 // TODO
 				measuredHeight += measure.Height;
 				measuredWidth = Math.Max(measuredWidth, measure.Width);
 			}
 
 			measuredHeight += MeasureSpacing(Stack.Spacing, spacingCount);
 			measuredHeight += padding.VerticalThickness;
-			measuredWidth += padding.HorizontalThickness;
+			measuredWidth += padding.HorizontalThickness; // good 292
 
 			var finalHeight = ResolveConstraints(heightConstraint, Stack.Height, measuredHeight, Stack.MinimumHeight, Stack.MaximumHeight);
 			var finalWidth = ResolveConstraints(widthConstraint, Stack.Width, measuredWidth, Stack.MinimumWidth, Stack.MaximumWidth);

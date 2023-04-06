@@ -33,20 +33,26 @@ namespace Microsoft.Maui.Layouts
 
 		public static Rect ComputeFrame(this IView view, Rect bounds)
 		{
+			if (view is ILabel)
+			{
+			}
+
 			Thickness margin = view.Margin;
 
 			// We need to determine the width the element wants to consume; normally that's the element's DesiredSize.Width
-			var consumedWidth = view.DesiredSize.Width;
+			var consumedWidth = view.DesiredSize.Width; //292 horizontal-end // 263 horizontal fill // on android is already 200 TODO where is this view.DesiredSize set?
 
+			// TODO when would we not want to use the below for our labels? 
+			//if (/*view.HorizontalLayoutAlignment == LayoutAlignment.Fill && */ !IsExplicitSet(view.Width))
 			if (view.HorizontalLayoutAlignment == LayoutAlignment.Fill && !IsExplicitSet(view.Width))
 			{
 				// But if the element is set to fill horizontally and it doesn't have an explicitly set width,
 				// then we want the width of the entire bounds
-				consumedWidth = bounds.Width;
+				consumedWidth = bounds.Width; // 200 horizontal fill
 			}
 
 			// And the actual frame width needs to subtract the margins
-			var frameWidth = Math.Max(0, consumedWidth - margin.HorizontalThickness);
+			var frameWidth = Math.Max(0, consumedWidth - margin.HorizontalThickness); //292 horizontal-end // 200 horizontal fill
 
 			// We need to determine the height the element wants to consume; normally that's the element's DesiredSize.Height
 			var consumedHeight = view.DesiredSize.Height;
@@ -61,7 +67,7 @@ namespace Microsoft.Maui.Layouts
 			// And the actual frame height needs to subtract the margins
 			var frameHeight = Math.Max(0, consumedHeight - margin.VerticalThickness);
 
-			var frameX = AlignHorizontal(view, bounds, margin);
+			var frameX = AlignHorizontal(view, bounds, margin); // -92.66 horizontal-end // 0 horizontal-fill // android 0
 			var frameY = AlignVertical(view, bounds, margin);
 
 			return new Rect(frameX, frameY, frameWidth, frameHeight);

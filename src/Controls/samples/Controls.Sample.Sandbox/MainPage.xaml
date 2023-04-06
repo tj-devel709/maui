@@ -1,7 +1,187 @@
-﻿<ContentPage
+﻿
+<!--<ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="Maui.Controls.Sample.MainPage"
     xmlns:local="clr-namespace:Maui.Controls.Sample">
+
+    <VerticalStackLayout Background="lightgray" WidthRequest="200">
+        <Label LineBreakMode="MiddleTruncation" HorizontalOptions="End"
+               Text="MiddleTruncation End Lorem Ipsum is a thing."/>
+    </VerticalStackLayout>
+           
+
+</ContentPage>-->
+
+
+
+
+
+
+
+<!--<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="Maui.Controls.Sample.MainPage"
+    xmlns:local="clr-namespace:Maui.Controls.Sample">
+
+    <ScrollView>
+        <VerticalStackLayout Background="lightgray" WidthRequest="200">
+            <Label LineBreakMode="MiddleTruncation" HorizontalOptions="End"
+               Text="MiddleTruncation End Lorem Ipsum is a thing."/>
+            <Label LineBreakMode="TailTruncation" HorizontalTextAlignment="Start" HorizontalOptions="Fill"
+               Text="TailTruction Fill Lorem Ipsum is a thing."/>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>-->
+
+
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="Maui.Controls.Sample.MainPage"
+    xmlns:local="clr-namespace:Maui.Controls.Sample">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="5" Margin="15, 0, 0, 500">
+
+            <Label Text="Different LineBreakModes" Margin="0, 30, 0, 0"/>
+            <Label LineBreakMode="TailTruncation" BackgroundColor="yellow" 
+               Text="TailTruction - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+
+            <Label LineBreakMode="MiddleTruncation" BackgroundColor="yellow" 
+               Text="MiddleTruncation - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+
+            <Label LineBreakMode="HeadTruncation" BackgroundColor="yellow" 
+               Text="HeadTruncation - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="CharacterWrap" BackgroundColor="yellow" 
+               Text="CharacterWrap - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="NoWrap" BackgroundColor="yellow" 
+               Text="NoWrap - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="WordWrap" BackgroundColor="yellow" 
+               Text="WordWrap - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+
+            <Label Text="While using HorizontalOptions" Margin="0, 30, 0, 0"/>
+            <Label LineBreakMode="TailTruncation" HorizontalOptions="Start" BackgroundColor="yellow"
+               Text="TailTruction plus Start - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="TailTruncation" HorizontalOptions="Center" BackgroundColor="yellow"
+               Text="TailTruction plus Center - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="TailTruncation" HorizontalOptions="End" BackgroundColor="yellow"
+               Text="TailTruction plus End - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+
+            <Label Text="While using HorizontalOptions W/TA" Margin="0, 30, 0, 0"/>
+            <Label LineBreakMode="TailTruncation" HorizontalOptions="Start" BackgroundColor="yellow" HorizontalTextAlignment="Start"
+               Text="TailTruction plus Start - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="TailTruncation" HorizontalOptions="Center" BackgroundColor="yellow"   HorizontalTextAlignment="Center"
+               Text="TailTruction plus Center - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="TailTruncation" HorizontalOptions="End" BackgroundColor="yellow"  HorizontalTextAlignment="End"
+               Text="TailTruction plus End - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+
+
+            <Label Text="While using Vertical Options" Margin="0, 30, 0, 0"/>
+            <Label LineBreakMode="TailTruncation" VerticalOptions="Start" BackgroundColor="yellow" 
+               Text="TailTruction plus Start - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="TailTruncation" VerticalOptions="Center" BackgroundColor="yellow" 
+               Text="TailTruction plus Center - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+            <Label LineBreakMode="TailTruncation" VerticalOptions="End" BackgroundColor="yellow" 
+               Text="TailTruction plus End - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+
+            <VerticalStackLayout Background="lightgray" WidthRequest="150">
+                <Label Text="Thin view" Margin="0, 30, 0, 0"/>
+                <Label Text="Diff LBM" Margin="0, 30, 0, 0"/>
+                <Label LineBreakMode="TailTruncation" BackgroundColor="yellow" 
+               Text="TailTruction - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+
+                <Label LineBreakMode="MiddleTruncation" BackgroundColor="yellow" 
+               Text="MiddleTruncation - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+
+                <Label LineBreakMode="HeadTruncation" BackgroundColor="yellow" 
+               Text="HeadTruncation - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+                <Label LineBreakMode="NoWrap" BackgroundColor="yellow" 
+               Text="NoWrap - Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book."/>
+               
+                <Label Text="HorizontalTA" Margin="0, 30, 0, 0"/>
+                <Label LineBreakMode="TailTruncation" HorizontalTextAlignment="Start" BackgroundColor="yellow" 
+               Text="TailTruction plus Start - Lorem."/>
+                <Label LineBreakMode="TailTruncation" HorizontalTextAlignment="Center" BackgroundColor="yellow" 
+               Text="TailTruction plus Center - Lorem."/>
+                <Label LineBreakMode="TailTruncation" HorizontalTextAlignment="End" BackgroundColor="yellow" 
+               Text="TailTruction plus End - Lorem."/>
+
+
+                <Label Text="HorizontalOptions" Margin="0, 30, 0, 0"/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="Start" BackgroundColor="yellow" 
+               Text="TailTruction plus Start - Lorem."/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="Center" BackgroundColor="yellow" 
+               Text="TailTruction plus Center - Lorem."/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="End" BackgroundColor="yellow" 
+               Text="TailTruction plus End - Lorem."/>
+
+
+                <Label Text="HorizontalOptions/TA" Margin="0, 30, 0, 0"/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="Start" BackgroundColor="yellow" HorizontalTextAlignment="Start"
+               Text="TailTruction plus Start - Lorem."/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="Center" BackgroundColor="yellow" HorizontalTextAlignment="Center"
+               Text="TailTruction plus Center - Lorem."/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="End" BackgroundColor="yellow" HorizontalTextAlignment="End"
+               Text="TailTruction plus End - Lorem."/>
+            </VerticalStackLayout>
+
+
+            <VerticalStackLayout Background="lightgray" WidthRequest="150">
+                <Label Text="SmallText" Margin="0, 30, 0, 0"/>
+
+                <Label Text="HorizontalTA" Margin="0, 30, 0, 0"/>
+                <Label Text="W/O trunc"/>
+                <Label LineBreakMode="TailTruncation" HorizontalTextAlignment="Start" BackgroundColor="yellow" 
+               Text="Start"/>
+                <Label LineBreakMode="TailTruncation" HorizontalTextAlignment="Center" BackgroundColor="yellow" 
+               Text="Center"/>
+                <Label LineBreakMode="TailTruncation" HorizontalTextAlignment="End" BackgroundColor="yellow" 
+               Text="End"/>
+
+
+                <Label Text="HorizontalOptions" Margin="0, 30, 0, 0"/>
+                <Label Text="W/O trunc"/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="Start" BackgroundColor="yellow" 
+               Text="Start"/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="Center" BackgroundColor="yellow" 
+               Text="Center"/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="End" BackgroundColor="yellow" 
+               Text="End"/>
+
+                <Label Text="HorizontalOptions" Margin="0, 30, 0, 0"/>
+                <Label Text="W/O trunc W/TA"/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="Start" BackgroundColor="yellow" HorizontalTextAlignment="Start"
+               Text="Start"/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="Center" BackgroundColor="yellow" HorizontalTextAlignment="Center"
+               Text="Center"/>
+                <Label LineBreakMode="TailTruncation" HorizontalOptions="End" BackgroundColor="yellow" HorizontalTextAlignment="End"
+               Text="End"/>
+
+                <Label Text="HorizontalTA" Margin="0, 30, 0, 0"/>
+                <Label Text="W/ trunc"/>
+                <Label HorizontalTextAlignment="Start" BackgroundColor="yellow" 
+               Text="Start"/>
+                <Label HorizontalTextAlignment="Center" BackgroundColor="yellow" 
+               Text="Center"/>
+                <Label  HorizontalTextAlignment="End" BackgroundColor="yellow" 
+               Text="End"/>
+
+
+                <Label Text="HorizontalOptions" Margin="0, 30, 0, 0"/>
+                <Label Text="W/ trunc"/>
+                <Label  HorizontalOptions="Start" BackgroundColor="yellow" 
+               Text="Start"/>
+                <Label HorizontalOptions="Center" BackgroundColor="yellow" 
+               Text="Center"/>
+                <Label HorizontalOptions="End" BackgroundColor="yellow" 
+               Text="End"/>
+
+             </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
 
 </ContentPage>

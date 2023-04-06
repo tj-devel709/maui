@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.Maui;
 using Microsoft.Maui.Controls.Internals;
@@ -194,8 +195,14 @@ namespace Microsoft.Maui.Controls
 		/// <include file="../../docs/Microsoft.Maui.Controls/View.xml" path="//Member[@MemberName='HorizontalOptions']/Docs/*" />
 		public LayoutOptions HorizontalOptions
 		{
-			get { return (LayoutOptions)GetValue(HorizontalOptionsProperty); }
-			set { SetValue(HorizontalOptionsProperty, value); }
+			get { //return (LayoutOptions)GetValue(HorizontalOptionsProperty);
+				  var debug = (LayoutOptions)GetValue(HorizontalOptionsProperty);
+				Console.WriteLine($"Getter for HorizontalOptions: {debug.Alignment}");
+				return debug;
+			}
+			set {
+				Console.WriteLine($"Setter for HorizontalOptions: {HorizontalOptionsProperty} = {value}");
+				SetValue(HorizontalOptionsProperty, value); }
 		}
 
 		/// <include file="../../docs/Microsoft.Maui.Controls/View.xml" path="//Member[@MemberName='Margin']/Docs/*" />

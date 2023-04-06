@@ -116,6 +116,12 @@ namespace Microsoft.Maui.Controls
 
 			var context = property.DefaultValueCreator != null ? GetOrCreateContext(property) : GetContext(property);
 
+			if (//property.PropertyName == "HorizontalTextAlignment" ||
+				property.PropertyName == "HorizontalOptions" && context is not null)
+			{
+				Console.WriteLine($"HorizontalOptions Context is not null: {context}");
+			}
+
 			return context == null ? property.DefaultValue : context.Value;
 		}
 

@@ -66,6 +66,7 @@ namespace Microsoft.Maui.Platform
 
 		public override void SubviewAdded(UIView uiview)
 		{
+			// TODO TJ
 			InvalidateConstraintsCache();
 			base.SubviewAdded(uiview);
 			Superview?.SetNeedsLayout();

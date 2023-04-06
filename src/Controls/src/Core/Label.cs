@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.Maui.Controls.Internals;
 using Microsoft.Maui.Graphics;
@@ -139,15 +140,27 @@ namespace Microsoft.Maui.Controls
 		/// <include file="../../docs/Microsoft.Maui.Controls/Label.xml" path="//Member[@MemberName='HorizontalTextAlignment']/Docs/*" />
 		public TextAlignment HorizontalTextAlignment
 		{
-			get { return (TextAlignment)GetValue(TextAlignmentElement.HorizontalTextAlignmentProperty); }
-			set { SetValue(TextAlignmentElement.HorizontalTextAlignmentProperty, value); }
+			get {
+				var debug = (TextAlignment)GetValue(TextAlignmentElement.HorizontalTextAlignmentProperty);
+				Console.WriteLine($"Getter for HorizontalTextAlignment: {debug}");
+				return debug;
+			}
+			set {
+				Console.WriteLine($"Setter for HorizontalTextAlignment: {TextAlignmentElement.HorizontalTextAlignmentProperty} = {value}");
+				SetValue(TextAlignmentElement.HorizontalTextAlignmentProperty, value); }
 		}
 
 		/// <include file="../../docs/Microsoft.Maui.Controls/Label.xml" path="//Member[@MemberName='LineBreakMode']/Docs/*" />
 		public LineBreakMode LineBreakMode
 		{
-			get { return (LineBreakMode)GetValue(LineBreakModeProperty); }
-			set { SetValue(LineBreakModeProperty, value); }
+			get {  //return (LineBreakMode)GetValue(LineBreakModeProperty);
+				var debug = (LineBreakMode)GetValue(LineBreakModeProperty);
+				Console.WriteLine($"Getter for LineBreakModeProperty: {debug}");
+				return debug;
+			}
+			set {
+				Console.WriteLine($"Setter for LineBreakModeProperty: {LineBreakModeProperty} = {value}");
+				SetValue(LineBreakModeProperty, value); }
 		}
 
 		/// <include file="../../docs/Microsoft.Maui.Controls/Label.xml" path="//Member[@MemberName='Text']/Docs/*" />

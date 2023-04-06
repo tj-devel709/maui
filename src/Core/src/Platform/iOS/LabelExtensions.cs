@@ -1,3 +1,4 @@
+using System;
 using Foundation;
 using Microsoft.Maui.Graphics;
 using ObjCRuntime;
@@ -33,6 +34,7 @@ namespace Microsoft.Maui.Platform
 
 		public static void UpdateHorizontalTextAlignment(this UILabel platformLabel, ILabel label)
 		{
+			Console.WriteLine($"UpdateHorizontalTextAlignment: {platformLabel.Text}");
 			platformLabel.TextAlignment = label.HorizontalTextAlignment.ToPlatformHorizontal(platformLabel.EffectiveUserInterfaceLayoutDirection);
 		}
 

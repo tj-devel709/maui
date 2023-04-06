@@ -289,6 +289,7 @@ namespace Microsoft.Maui.Platform
 
 		public static void UpdateWidth(this UIView platformView, IView view)
 		{
+			// TODO TJ Updating Width here
 			UpdateFrame(platformView, view);
 		}
 

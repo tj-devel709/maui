@@ -96,6 +96,7 @@ namespace Microsoft.Maui.Controls
 
 		public static void MapLineBreakMode(ILabelHandler handler, Label label)
 		{
+			// TODO TJ
 			handler.PlatformView?.UpdateLineBreakMode(label);
 		}
 

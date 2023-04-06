@@ -24,6 +24,8 @@ namespace Microsoft.Maui.Platform
 			}
 		}
 
+		// TJ TODO Where is this frame coming from?
+		// Why do we only check the vertical and not the horizontal?
 		public MauiLabel(RectangleF frame) : base(frame)
 		{
 		}
@@ -32,6 +34,8 @@ namespace Microsoft.Maui.Platform
 		{
 		}
 
+		// TODO TJ when we get here, the rect is already 292 -> larger than the parent of 200
+		// need to figure out when this rect/Frame is being set to this value
 		public override void DrawText(RectangleF rect)
 		{
 			rect = TextInsets.InsetRect(rect);
@@ -83,7 +87,16 @@ namespace Microsoft.Maui.Platform
 			}
 		}
 
-		public override SizeF SizeThatFits(SizeF size) => AddInsets(base.SizeThatFits(size));
+		public override SizeF SizeThatFits(SizeF size)
+		{
+			var requestedSize = base.SizeThatFits(size);
+			// the size of the container may be smaller than the requestedSize
+			size.Width = nfloat.Min(requestedSize.Width, size.Width);
+			size.Height = requestedSize.Height;
+			return AddInsets(size);
+		}
+
+		//public override SizeF SizeThatFits(SizeF size) => AddInsets(base.SizeThatFits(size));
 
 		SizeF AddInsets(SizeF size) => new SizeF(
 			width: size.Width + TextInsets.Left + TextInsets.Right,

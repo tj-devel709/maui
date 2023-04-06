@@ -71,11 +71,13 @@ namespace Microsoft.Maui
 				return new Size(widthConstraint, heightConstraint);
 			}
 
+			// debug here
 			var sizeThatFits = platformView.SizeThatFits(new CoreGraphics.CGSize((float)widthConstraint, (float)heightConstraint));
+			// good label - 292 72
 
 			var size = new Size(
 				sizeThatFits.Width == float.PositiveInfinity ? double.PositiveInfinity : sizeThatFits.Width,
-				sizeThatFits.Height == float.PositiveInfinity ? double.PositiveInfinity : sizeThatFits.Height);
+				sizeThatFits.Height == float.PositiveInfinity ? double.PositiveInfinity : sizeThatFits.Height); // good - 292, 17
 
 			if (double.IsInfinity(size.Width) || double.IsInfinity(size.Height))
 			{
@@ -83,7 +85,7 @@ namespace Microsoft.Maui
 				size = new Size(platformView.Frame.Width, platformView.Frame.Height);
 			}
 
-			var finalWidth = ResolveConstraints(size.Width, virtualView.Width, virtualView.MinimumWidth, virtualView.MaximumWidth);
+			var finalWidth = ResolveConstraints(size.Width, virtualView.Width, virtualView.MinimumWidth, virtualView.MaximumWidth); // good 292
 			var finalHeight = ResolveConstraints(size.Height, virtualView.Height, virtualView.MinimumHeight, virtualView.MaximumHeight);
 
 			return new Size(finalWidth, finalHeight);

@@ -13,11 +13,18 @@ namespace Microsoft.Maui.Handlers
 
 		public UIViewController? ViewController { get; set; }
 
-		public override void PlatformArrange(Rect rect) =>
+		// on the good label - this rect is already 200, how about the bad one?
+		// on bad one rect = X=-92.66666666666669, Y=0, Width=292.6666666666667, Height=17
+		public override void PlatformArrange(Rect rect)
+		{
 			this.PlatformArrangeHandler(rect);
+		}
 
-		public override Size GetDesiredSize(double widthConstraint, double heightConstraint) =>
-			this.GetDesiredSizeFromHandler(widthConstraint, heightConstraint);
+		public override Size GetDesiredSize(double widthConstraint, double heightConstraint)
+		{
+			var debug = this.GetDesiredSizeFromHandler(widthConstraint, heightConstraint);
+			return debug;
+		}
 
 		protected override void SetupContainer()
 		{

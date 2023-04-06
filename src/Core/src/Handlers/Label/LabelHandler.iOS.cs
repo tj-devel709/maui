@@ -7,7 +7,10 @@ namespace Microsoft.Maui.Handlers
 {
 	public partial class LabelHandler : ViewHandler<ILabel, MauiLabel>
 	{
-		protected override MauiLabel CreatePlatformView() => new MauiLabel();
+		protected override MauiLabel CreatePlatformView()
+		{
+			return new MauiLabel();
+		}
 
 		public override bool NeedsContainer =>
 			VirtualView?.Background != null ||
@@ -40,6 +43,7 @@ namespace Microsoft.Maui.Handlers
 
 		public static void MapHorizontalTextAlignment(ILabelHandler handler, ILabel label)
 		{
+			Console.WriteLine($"MapHorizontalTextAlignment: {label.Text}");
 			handler.PlatformView?.UpdateHorizontalTextAlignment(label);
 		}
 

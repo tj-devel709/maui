@@ -62,6 +62,12 @@ namespace Microsoft.Maui.Handlers
 
 		ILabel ILabelHandler.VirtualView => VirtualView;
 
-		PlatformView ILabelHandler.PlatformView => PlatformView;
+		PlatformView ILabelHandler.PlatformView
+		{
+			get
+			{
+				return PlatformView;
+			}
+		}
 	}
 }

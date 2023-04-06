@@ -168,6 +168,9 @@ namespace Microsoft.Maui
 		public void Add(string key, Action<TViewHandler, TVirtualView> action) =>
 			SetPropertyCore(key, (h, v) =>
 			{
+				//if (key == "Width" && v is MauiLabel)
+				//{
+				//}
 				if (v is TVirtualView vv)
 					action?.Invoke((TViewHandler)h, vv);
 				else if (Chained != null)

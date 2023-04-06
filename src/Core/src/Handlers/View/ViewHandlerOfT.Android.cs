@@ -11,11 +11,16 @@ namespace Microsoft.Maui.Handlers
 	{
 		public Context Context => MauiContext?.Context ?? throw new InvalidOperationException($"Context cannot be null here");
 
-		public override void PlatformArrange(Rect frame) =>
+		public override void PlatformArrange(Rect frame)
+		{
 			this.PlatformArrangeHandler(frame);
+		}
 
-		public override Size GetDesiredSize(double widthConstraint, double heightConstraint) =>
-			this.GetDesiredSizeFromHandler(widthConstraint, heightConstraint);
+		public override Size GetDesiredSize(double widthConstraint, double heightConstraint)
+		{
+			var debug = this.GetDesiredSizeFromHandler(widthConstraint, heightConstraint);
+			return debug;
+		}
 
 		protected override void SetupContainer() =>
 			WrapperView.SetupContainer(PlatformView, Context, ContainerView, (cv) => ContainerView = cv);

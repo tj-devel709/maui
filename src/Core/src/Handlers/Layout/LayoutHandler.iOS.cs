@@ -32,6 +32,7 @@ namespace Microsoft.Maui.Handlers
 
 			foreach (var child in VirtualView.OrderByZIndex())
 			{
+				// TODO TJ
 				PlatformView.AddSubview(child.ToPlatform(MauiContext));
 			}
 		}
