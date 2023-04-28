@@ -114,7 +114,21 @@ namespace Microsoft.Maui.Controls
 			if (property == null)
 				throw new ArgumentNullException(nameof(property));
 
+			if (property.PropertyName == "SafeAreaInsets")
+			{
+			}
+
 			var context = property.DefaultValueCreator != null ? GetOrCreateContext(property) : GetContext(property);
+
+			if (property.PropertyName == "SafeAreaInsets")
+			{
+				var c1 = context?.Value;
+			}
+
+			if (property.PropertyName == "SafeAreaInsets" && context is not null)
+			{
+				var c = context.Value;
+			}
 
 			return context == null ? property.DefaultValue : context.Value;
 		}

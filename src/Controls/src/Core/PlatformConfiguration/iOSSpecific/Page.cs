@@ -1,5 +1,7 @@
 #nullable disable
 using System.ComponentModel;
+using System.Linq;
+//using UIKit;
 
 namespace Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific
 {
@@ -136,7 +138,24 @@ namespace Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific
 		public static Thickness GetSafeAreaInsets(BindableObject element)
 		{
 			return (Thickness)element.GetValue(SafeAreaInsetsProperty);
+			//var origValue = (Thickness)element.GetValue(SafeAreaInsetsProperty);
+
+			//var scene = UIApplication.SharedApplication.ConnectedScenes.ToArray().FirstOrDefault();
+			//var windowScene = (UIWindowScene)scene;
+			//var safeArea2 = windowScene.Windows.FirstOrDefault()?.SafeAreaInsets;
+
+			////return origValue == Thickness.Zero ? TrasformInsetsToThickness(safeArea2) : origValue;
+			//return (Thickness)element.GetValue(SafeAreaInsetsProperty);
+
 		}
+
+		//static Thickness TrasformInsetsToThickness(UIEdgeInsets? inset)
+		//{
+		//	if (inset is UIEdgeInsets edgeInsets)
+		//		return new(edgeInsets.Left, edgeInsets.Top, edgeInsets.Right, edgeInsets.Bottom);
+
+		//	return Thickness.Zero;
+		//}
 
 		static void SetSafeAreaInsets(BindableObject element, Thickness value)
 		{

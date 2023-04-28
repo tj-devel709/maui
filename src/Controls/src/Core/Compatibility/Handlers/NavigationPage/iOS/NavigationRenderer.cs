@@ -140,6 +140,15 @@ namespace Microsoft.Maui.Controls.Handlers.Compatibility
 			base.ViewDidAppear(animated);
 
 			View.SetNeedsLayout();
+			// TODO the correct safe area insets are updated by here at least
+			// Apple documentation states that safeAreaInsets cannot be
+			// updated until after the page is visible onscreen.
+			// It also states that the safeArea customers want is probably from
+			// the root view controller. If we are looking at something like the
+			// mainPage, it will only show the safe area that is covered.
+			// https://developer.apple.com/documentation/uikit/uiview/2891103-safeareainsets?language=objc
+
+			// Perhaps here, we can 
 		}
 
 		public override void ViewWillAppear(bool animated)
@@ -202,6 +211,12 @@ namespace Microsoft.Maui.Controls.Handlers.Compatibility
 				throw new InvalidOperationException(
 					"NavigationPage must have a root Page before being used. Either call PushAsync with a valid Page, or pass a Page to the constructor before usage.");
 			}
+
+			//var tp = navPage?.CurrentPage?.ToPlatform();
+			//if (tp is UIView v)
+			//{
+			//	var vsa = v.SafeAreaInsets;
+			//}
 
 			navPageController.PushRequested += OnPushRequested;
 			navPageController.PopRequested += OnPopRequested;

@@ -33,6 +33,12 @@ namespace Microsoft.Maui.Platform
 
 			_view = view;
 
+			//var tp = view?.ToPlatform();
+			//if (tp is UIView v)
+			//{
+			//	var vsa = v.SafeAreaInsets;
+			//}
+
 			if (view is ITitledElement page)
 				Title = page.Title;
 
