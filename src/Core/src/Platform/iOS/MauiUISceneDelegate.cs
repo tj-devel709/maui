@@ -11,6 +11,13 @@ namespace Microsoft.Maui
 	[System.Runtime.Versioning.SupportedOSPlatform("tvos13.0")]
 	public class MauiUISceneDelegate : UIResponder, IUIWindowSceneDelegate
 	{
+#pragma warning disable RS0016 // Add public types and members to the declared API
+//		public override void PressesBegan(NSSet<UIPress> presses, UIPressesEvent evt)
+//#pragma warning restore RS0016 // Add public types and members to the declared API
+//		{
+//			base.PressesBegan(presses, evt);
+//		}
+
 		[Export("window")]
 		public virtual UIWindow? Window { get; set; }
 

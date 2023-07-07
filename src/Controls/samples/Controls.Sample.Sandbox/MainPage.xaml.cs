@@ -13,6 +13,22 @@ namespace Maui.Controls.Sample
 		public MainPage()
 		{
 			InitializeComponent();
+			button2.Focus();
+			
+		}
+
+		void button_Pressed(System.Object sender, System.EventArgs e)
+		{
+			button2.Focus();
+		}
+
+		void button_Pressed_1(System.Object sender, System.EventArgs e)
+						{
+			label.Text = label.Text + "1";
+		}
+
+		void button2_Focused(System.Object sender, Microsoft.Maui.Controls.FocusEventArgs e)
+		{
 		}
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Foundation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Hosting;
@@ -14,6 +15,22 @@ namespace Microsoft.Maui
 		internal const string GetConfigurationSelectorName = "application:configurationForConnectingSceneSession:options:";
 
 		IMauiContext _applicationContext = null!;
+
+#pragma warning disable RS0016 // Add public types and members to the declared API
+		public override void PressesBegan(NSSet<UIPress> presses, UIPressesEvent evt)
+#pragma warning restore RS0016 // Add public types and members to the declared API
+		{
+			base.PressesBegan(presses, evt);
+
+			foreach (UIPress press in presses)
+			{
+				if (press.Key is UIKey key)
+				{
+					var keyMod = key.CharactersIgnoringModifiers;
+					Console.WriteLine(keyMod);
+				}
+			}
+		}
 
 		protected MauiUIApplicationDelegate() : base()
 		{

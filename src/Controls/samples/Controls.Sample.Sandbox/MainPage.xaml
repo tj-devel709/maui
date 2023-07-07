@@ -3,4 +3,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="Maui.Controls.Sample.MainPage"
     xmlns:local="clr-namespace:Maui.Controls.Sample">
+
+    <VerticalStackLayout>
+        <Entry Placeholder="Entry" ReturnType="Next"/>
+        <Editor Placeholder="Editor" />
+        <Entry Placeholder="Entry"/>
+        <Entry Placeholder="Entry" ReturnType="Next"/>
+
+        <Button Text="Button" x:Name="button" Background="blue" Pressed="button_Pressed"/>
+        <Button Text="Button" x:Name="button2" Background="blue" Pressed="button_Pressed_1" Focused="button2_Focused"/>
+        <Label Text="0" x:Name="label"/>
+
+    </VerticalStackLayout>
 </ContentPage>
