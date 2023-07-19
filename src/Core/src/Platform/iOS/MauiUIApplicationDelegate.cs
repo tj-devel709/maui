@@ -27,7 +27,7 @@ namespace Microsoft.Maui
 				if (press.Key is UIKey key)
 				{
 					var keyMod = key.CharactersIgnoringModifiers;
-					Console.WriteLine(keyMod);
+					//Console.WriteLine(keyMod);
 				}
 			}
 		}

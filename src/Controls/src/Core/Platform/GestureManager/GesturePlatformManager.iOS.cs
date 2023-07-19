@@ -238,6 +238,7 @@ namespace Microsoft.Maui.Controls.Platform
 			{
 				var uiRecognizer = CreatePointerRecognizer(r =>
 				{
+					//r.ModifierFlags
 					if (weakRecognizer.Target is PointerGestureRecognizer pointerGestureRecognizer &&
 						weakEventTracker.Target is GesturePlatformManager eventTracker &&
 						eventTracker._handler?.VirtualView is View view &&
@@ -248,7 +249,7 @@ namespace Microsoft.Maui.Controls.Platform
 						switch (r.State)
 						{
 							case UIGestureRecognizerState.Began:
-								pointerGestureRecognizer.SendPointerEntered(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker));
+								pointerGestureRecognizer.SendPointerEntered(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), r.ModifierFlags);
 								break;
 							case UIGestureRecognizerState.Changed:
 								pointerGestureRecognizer.SendPointerMoved(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker));
@@ -256,7 +257,7 @@ namespace Microsoft.Maui.Controls.Platform
 							case UIGestureRecognizerState.Cancelled:
 							case UIGestureRecognizerState.Failed:
 							case UIGestureRecognizerState.Ended:
-								pointerGestureRecognizer.SendPointerExited(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker));
+								pointerGestureRecognizer.SendPointerExited(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), r.ModifierFlags);
 								break;
 						}
 					}

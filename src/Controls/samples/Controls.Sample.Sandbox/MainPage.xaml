@@ -13,6 +13,17 @@
         <Button Text="Button" x:Name="button" Background="blue" Pressed="button_Pressed"/>
         <Button Text="Button" x:Name="button2" Background="blue" Pressed="button_Pressed_1" Focused="button2_Focused"/>
         <Label Text="0" x:Name="label"/>
+        <BoxView HeightRequest="300"/>
 
+
+        <Label Text="Label with PointerGestureRecognizer" x:Name="GRLabel">
+            <Label.GestureRecognizers>
+                <PointerGestureRecognizer
+                    PointerEntered="PointerGestureRecognizer_PointerEntered"
+                    PointerExited="PointerGestureRecognizer_PointerExited">
+                </PointerGestureRecognizer>
+            </Label.GestureRecognizers>
+        </Label>
+        
     </VerticalStackLayout>
 </ContentPage>

@@ -21,7 +21,7 @@ namespace Microsoft.Maui.Platform
 			{
 				if (press.Key is UIKey key)
 				{
-					Console.WriteLine(key.KeyCode);
+					//Console.WriteLine(key.KeyCode);
 					var keyMod = key.CharactersIgnoringModifiers;
 					//Console.WriteLine(keyMod);
 					if (keyMod == "p")
