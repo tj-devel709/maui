@@ -10,14 +10,16 @@ namespace Microsoft.Maui.Controls
 	{
 
 		Func<IElement?, Point?>? _getPosition;
+		internal object? _gestureRecognizer;
 
 		public PointerEventArgs()
 		{
 		}
 
-		internal PointerEventArgs(Func<IElement?, Point?>? getPosition)
+		internal PointerEventArgs(Func<IElement?, Point?>? getPosition, object? recognizer)
 		{
 			_getPosition = getPosition;
+			_gestureRecognizer = recognizer;
 		}
 
 		public virtual Point? GetPosition(Element? relativeTo) =>

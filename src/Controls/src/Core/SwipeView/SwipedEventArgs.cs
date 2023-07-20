@@ -13,10 +13,19 @@ namespace Microsoft.Maui.Controls
 			Direction = direction;
 		}
 
+		internal SwipedEventArgs(object parameter, SwipeDirection direction, object recognizer)
+		{
+			Parameter = parameter;
+			Direction = direction;
+			_gestureRecognizer = recognizer;
+		}
+
 		/// <include file="../../docs/Microsoft.Maui.Controls/SwipedEventArgs.xml" path="//Member[@MemberName='Parameter']/Docs/*" />
 		public object Parameter { get; private set; }
 
 		/// <include file="../../docs/Microsoft.Maui.Controls/SwipedEventArgs.xml" path="//Member[@MemberName='Direction']/Docs/*" />
 		public SwipeDirection Direction { get; private set; }
+
+		internal object _gestureRecognizer;
 	}
 }

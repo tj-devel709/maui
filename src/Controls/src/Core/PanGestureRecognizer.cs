@@ -26,9 +26,19 @@ namespace Microsoft.Maui.Controls
 			PanUpdated?.Invoke(sender, new PanUpdatedEventArgs(GestureStatus.Running, gestureId, totalX, totalY));
 		}
 
+		internal void SendPan(Element sender, double totalX, double totalY, int gestureId, object recognizer)
+		{
+			PanUpdated?.Invoke(sender, new PanUpdatedEventArgs(GestureStatus.Running, gestureId, totalX, totalY, recognizer));
+		}
+
 		void IPanGestureController.SendPanCanceled(Element sender, int gestureId)
 		{
 			PanUpdated?.Invoke(sender, new PanUpdatedEventArgs(GestureStatus.Canceled, gestureId));
+		}
+
+		internal void SendPanCanceled(Element sender, int gestureId, object recognizer)
+		{
+			PanUpdated?.Invoke(sender, new PanUpdatedEventArgs(GestureStatus.Canceled, gestureId, recognizer));
 		}
 
 		void IPanGestureController.SendPanCompleted(Element sender, int gestureId)
@@ -36,9 +46,19 @@ namespace Microsoft.Maui.Controls
 			PanUpdated?.Invoke(sender, new PanUpdatedEventArgs(GestureStatus.Completed, gestureId));
 		}
 
+		internal void SendPanCompleted(Element sender, int gestureId, object recognizer)
+		{
+			PanUpdated?.Invoke(sender, new PanUpdatedEventArgs(GestureStatus.Completed, gestureId));
+		}
+
 		void IPanGestureController.SendPanStarted(Element sender, int gestureId)
 		{
 			PanUpdated?.Invoke(sender, new PanUpdatedEventArgs(GestureStatus.Started, gestureId));
+		}
+
+		internal void SendPanStarted(Element sender, int gestureId, object recognizer)
+		{
+			PanUpdated?.Invoke(sender, new PanUpdatedEventArgs(GestureStatus.Started, gestureId, recognizer));
 		}
 
 		public event EventHandler<PanUpdatedEventArgs> PanUpdated;

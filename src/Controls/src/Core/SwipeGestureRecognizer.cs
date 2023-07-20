@@ -102,6 +102,15 @@ namespace Microsoft.Maui.Controls
 
 			Swiped?.Invoke(sender, new SwipedEventArgs(CommandParameter, direction));
 		}
+
+		internal void SendSwiped(View sender, SwipeDirection direction, object recognizer)
+		{
+			ICommand cmd = Command;
+			if (cmd != null && cmd.CanExecute(CommandParameter))
+				cmd.Execute(CommandParameter);
+
+			Swiped?.Invoke(sender, new SwipedEventArgs(CommandParameter, direction, recognizer));
+		}
 	}
 
 	static class SwipeDirectionExtensions

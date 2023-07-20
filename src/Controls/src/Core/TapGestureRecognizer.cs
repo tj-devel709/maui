@@ -53,13 +53,13 @@ namespace Microsoft.Maui.Controls
 
 		public event EventHandler<TappedEventArgs>? Tapped;
 
-		internal void SendTapped(View sender, Func<IElement?, Point?>? getPosition = null)
+		internal void SendTapped(View sender, Func<IElement?, Point?>? getPosition = null, object? recognizer = null)
 		{
 			var cmd = Command;
 			if (cmd != null && cmd.CanExecute(CommandParameter))
 				cmd.Execute(CommandParameter);
 
-			Tapped?.Invoke(sender, new TappedEventArgs(CommandParameter, getPosition));
+			Tapped?.Invoke(sender, new TappedEventArgs(CommandParameter, getPosition, recognizer));
 		}
 
 	}

@@ -20,6 +20,16 @@ namespace Microsoft.Maui.Controls
 			Status = status;
 		}
 
+		internal PinchGestureUpdatedEventArgs(GestureStatus status, double scale, Point origin, object recognizer) : this(status, scale, origin)
+		{
+			_gestureRecognizer = recognizer;
+		}
+
+		internal PinchGestureUpdatedEventArgs(GestureStatus status, object recognizer) : this (status)
+		{
+			_gestureRecognizer = recognizer;
+		}
+
 		/// <include file="../../docs/Microsoft.Maui.Controls/PinchGestureUpdatedEventArgs.xml" path="//Member[@MemberName='Scale']/Docs/*" />
 		public double Scale { get; } = 1;
 
@@ -28,5 +38,7 @@ namespace Microsoft.Maui.Controls
 
 		/// <include file="../../docs/Microsoft.Maui.Controls/PinchGestureUpdatedEventArgs.xml" path="//Member[@MemberName='Status']/Docs/*" />
 		public GestureStatus Status { get; }
+
+		internal object _gestureRecognizer;
 	}
 }

@@ -7,6 +7,7 @@ namespace Microsoft.Maui.Controls
 	public class TappedEventArgs : EventArgs
 	{
 		Func<IElement?, Point?>? _getPosition;
+		internal object? _gestureRecognizer;
 
 		/// <include file="../../docs/Microsoft.Maui.Controls/TappedEventArgs.xml" path="//Member[@MemberName='.ctor']/Docs/*" />
 		public TappedEventArgs(object? parameter)
@@ -14,9 +15,10 @@ namespace Microsoft.Maui.Controls
 			Parameter = parameter;
 		}
 
-		internal TappedEventArgs(object? parameter, Func<IElement?, Point?>? getPosition) : this(parameter)
+		internal TappedEventArgs(object? parameter, Func<IElement?, Point?>? getPosition, object? recognizer) : this(parameter)
 		{
 			_getPosition = getPosition;
+			_gestureRecognizer = recognizer;
 		}
 
 		/// <include file="../../docs/Microsoft.Maui.Controls/TappedEventArgs.xml" path="//Member[@MemberName='Parameter']/Docs/*" />

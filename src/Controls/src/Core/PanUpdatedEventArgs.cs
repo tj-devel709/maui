@@ -20,6 +20,16 @@ namespace Microsoft.Maui.Controls
 			GestureId = gestureId;
 		}
 
+		internal PanUpdatedEventArgs(GestureStatus type, int gestureId, double totalx, double totaly, object recognizer) : this(type, gestureId, totalx, totaly)
+		{
+			_gestureRecognizer = recognizer;
+		}
+
+		internal PanUpdatedEventArgs(GestureStatus type, int gestureId, object recognizer) : this (type, gestureId)
+		{
+			_gestureRecognizer = recognizer;
+		}
+
 		/// <include file="../../docs/Microsoft.Maui.Controls/PanUpdatedEventArgs.xml" path="//Member[@MemberName='GestureId']/Docs/*" />
 		public int GestureId { get; }
 
@@ -31,5 +41,7 @@ namespace Microsoft.Maui.Controls
 
 		/// <include file="../../docs/Microsoft.Maui.Controls/PanUpdatedEventArgs.xml" path="//Member[@MemberName='TotalY']/Docs/*" />
 		public double TotalY { get; }
+
+		internal object _gestureRecognizer;
 	}
 }

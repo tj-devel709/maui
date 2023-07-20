@@ -119,40 +119,41 @@ namespace Microsoft.Maui.Controls
 		/// <summary>
 		/// For internal use by the .NET MAUI platform.
 		/// </summary>
-		internal void SendPointerEntered(View sender, Func<IElement?, Point?>? getPosition)
+		internal void SendPointerEntered(View sender, Func<IElement?, Point?>? getPosition, object? recognizer = null)
 		{
 			ICommand cmd = PointerEnteredCommand;
 			if (cmd?.CanExecute(PointerEnteredCommandParameter) == true)
 				cmd.Execute(PointerEnteredCommandParameter);
 
 			EventHandler<PointerEventArgs>? handler = PointerEntered;
-			handler?.Invoke(sender, new PointerEventArgs(getPosition));
+			var gp = new PointerEventArgs(getPosition, recognizer);
+			handler?.Invoke(sender, new PointerEventArgs(getPosition, recognizer));
 		}
 
 		/// <summary>
 		/// For internal use by the .NET MAUI platform.
 		/// </summary>
-		internal void SendPointerExited(View sender, Func<IElement?, Point?>? getPosition)
+		internal void SendPointerExited(View sender, Func<IElement?, Point?>? getPosition, object? recognizer = null)
 		{
 			ICommand cmd = PointerExitedCommand;
 			if (cmd?.CanExecute(PointerExitedCommandParameter) == true)
 				cmd.Execute(PointerExitedCommandParameter);
 
 			EventHandler<PointerEventArgs>? handler = PointerExited;
-			handler?.Invoke(sender, new PointerEventArgs(getPosition));
+			handler?.Invoke(sender, new PointerEventArgs(getPosition, recognizer));
 		}
 
 		/// <summary>
 		/// For internal use by the .NET MAUI platform.
 		/// </summary>
-		internal void SendPointerMoved(View sender, Func<IElement?, Point?>? getPosition)
+		internal void SendPointerMoved(View sender, Func<IElement?, Point?>? getPosition, object? recognizer = null)
 		{
 			ICommand cmd = PointerMovedCommand;
 			if (cmd?.CanExecute(PointerMovedCommandParameter) == true)
 				cmd.Execute(PointerMovedCommandParameter);
 
 			EventHandler<PointerEventArgs>? handler = PointerMoved;
-			handler?.Invoke(sender, new PointerEventArgs(getPosition));
+			handler?.Invoke(sender, new PointerEventArgs(getPosition, recognizer));
 		}
 
 		internal static void SetupForPointerOverVSM(
