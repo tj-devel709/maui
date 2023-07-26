@@ -12,11 +12,18 @@ namespace Microsoft.Maui.Controls
 			Data = new DataPackage();
 		}
 
+		internal DragStartingEventArgs(object recognizer) : this()
+		{
+			_gestureRecognizer = recognizer;
+		}
+
 		/// <include file="../../../docs/Microsoft.Maui.Controls/DragStartingEventArgs.xml" path="//Member[@MemberName='Handled']/Docs/*" />
 		public bool Handled { get; set; }
 		/// <include file="../../../docs/Microsoft.Maui.Controls/DragStartingEventArgs.xml" path="//Member[@MemberName='Cancel']/Docs/*" />
 		public bool Cancel { get; set; }
 		/// <include file="../../../docs/Microsoft.Maui.Controls/DragStartingEventArgs.xml" path="//Member[@MemberName='Data']/Docs/*" />
 		public DataPackage Data { get; private set; }
+
+		internal object _gestureRecognizer;
 	}
 }

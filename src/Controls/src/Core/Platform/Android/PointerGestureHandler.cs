@@ -30,13 +30,13 @@ namespace Microsoft.Maui.Controls.Platform
 					switch (e.Action)
 					{
 						case MotionEventActions.HoverEnter:
-							pgr.SendPointerEntered(view, (relativeTo) => e.CalculatePosition(GetView(), relativeTo));
+							pgr.SendPointerEntered(view, (relativeTo) => e.CalculatePosition(GetView(), relativeTo), e);
 							break;
 						case MotionEventActions.HoverMove:
-							pgr.SendPointerMoved(view, (relativeTo) => e.CalculatePosition(GetView(), relativeTo));
+							pgr.SendPointerMoved(view, (relativeTo) => e.CalculatePosition(GetView(), relativeTo), e);
 							break;
 						case MotionEventActions.HoverExit:
-							pgr.SendPointerExited(view, (relativeTo) => e.CalculatePosition(GetView(), relativeTo));
+							pgr.SendPointerExited(view, (relativeTo) => e.CalculatePosition(GetView(), relativeTo), e);
 							break;
 					}
 				}

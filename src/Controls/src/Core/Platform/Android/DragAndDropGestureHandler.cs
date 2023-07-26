@@ -158,7 +158,7 @@ namespace Microsoft.Maui.Controls.Platform
 		void HandleDropCompleted(View element)
 		{
 			var args = new DropCompletedEventArgs();
-			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args), element);
+			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args, rec), element);
 		}
 
 		bool HandleDragLeave(DataPackage package)

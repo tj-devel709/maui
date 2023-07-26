@@ -145,7 +145,7 @@ namespace Microsoft.Maui.Controls.Platform
 					return;
 
 				if (view != null)
-					tapGestureRecognizer.SendTapped(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakPlatformRecognizer, weakEventTracker));
+					tapGestureRecognizer.SendTapped(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakPlatformRecognizer, weakEventTracker), uITapGestureRecognizer);
 			}
 			else if (recognizer is ChildGestureRecognizer childGestureRecognizer)
 			{
@@ -159,7 +159,7 @@ namespace Microsoft.Maui.Controls.Platform
 				var childTapGestureRecognizer = childGestureRecognizer.GestureRecognizer as TapGestureRecognizer;
 				foreach (var item in recognizers)
 					if (item == childTapGestureRecognizer && view != null)
-						childTapGestureRecognizer.SendTapped(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakPlatformRecognizer, weakEventTracker));
+						childTapGestureRecognizer.SendTapped(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakPlatformRecognizer, weakEventTracker), uITapGestureRecognizer);
 			}
 		}
 
@@ -248,15 +248,15 @@ namespace Microsoft.Maui.Controls.Platform
 						switch (r.State)
 						{
 							case UIGestureRecognizerState.Began:
-								pointerGestureRecognizer.SendPointerEntered(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker));
+								pointerGestureRecognizer.SendPointerEntered(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), r);
 								break;
 							case UIGestureRecognizerState.Changed:
-								pointerGestureRecognizer.SendPointerMoved(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker));
+								pointerGestureRecognizer.SendPointerMoved(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), r);
 								break;
 							case UIGestureRecognizerState.Cancelled:
 							case UIGestureRecognizerState.Failed:
 							case UIGestureRecognizerState.Ended:
-								pointerGestureRecognizer.SendPointerExited(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker));
+								pointerGestureRecognizer.SendPointerExited(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), r);
 								break;
 						}
 					}
@@ -267,6 +267,7 @@ namespace Microsoft.Maui.Controls.Platform
 			var swipeRecognizer = recognizer as SwipeGestureRecognizer;
 			if (swipeRecognizer != null)
 			{
+				var uISwipeRecognizer = new UISwipeGestureRecognizer();
 				var returnAction = new Action<SwipeDirection>((direction) =>
 				{
 					var swipeGestureRecognizer = weakRecognizer.Target as SwipeGestureRecognizer;
@@ -274,9 +275,9 @@ namespace Microsoft.Maui.Controls.Platform
 					var view = eventTracker?._handler.VirtualView as View;
 
 					if (swipeGestureRecognizer != null && view != null)
-						swipeGestureRecognizer.SendSwiped(view, direction);
+						swipeGestureRecognizer.SendSwiped(view, direction, uISwipeRecognizer);
 				});
-				var uiRecognizer = CreateSwipeRecognizer(swipeRecognizer.Direction, returnAction, 1);
+				var uiRecognizer = CreateSwipeRecognizer(uISwipeRecognizer, swipeRecognizer.Direction, returnAction, 1);
 				return uiRecognizer;
 			}
 
@@ -287,6 +288,7 @@ namespace Microsoft.Maui.Controls.Platform
 				var uiRecognizer = CreatePinchRecognizer(r =>
 				{
 					if (weakRecognizer.Target is IPinchGestureController pinchGestureRecognizer &&
+						pinchGestureRecognizer is PinchGestureRecognizer basePinchGestureRecognizer &&
 						weakEventTracker.Target is GesturePlatformManager eventTracker &&
 						eventTracker._handler?.VirtualView is View view &&
 						UIApplication.SharedApplication.GetKeyWindow() is UIWindow window)
@@ -303,14 +305,14 @@ namespace Microsoft.Maui.Controls.Platform
 								if (r.NumberOfTouches < 2)
 									return;
 
-								pinchGestureRecognizer.SendPinchStarted(view, scaledPoint);
+								basePinchGestureRecognizer.SendPinchStarted(view, scaledPoint, r);
 								startingScale = view.Scale;
 								break;
 							case UIGestureRecognizerState.Changed:
 								if (r.NumberOfTouches < 2 && pinchGestureRecognizer.IsPinching)
 								{
 									r.State = UIGestureRecognizerState.Ended;
-									pinchGestureRecognizer.SendPinchEnded(view);
+									basePinchGestureRecognizer.SendPinchEnded(view, r);
 									return;
 								}
 								var scale = r.Scale;
@@ -321,17 +323,17 @@ namespace Microsoft.Maui.Controls.Platform
 								if (oldScale > scale)
 									delta = 1 - dif;
 
-								pinchGestureRecognizer.SendPinch(view, delta, scaledPoint);
+								basePinchGestureRecognizer.SendPinch(view, delta, scaledPoint, r);
 								eventTracker._previousScale = scale;
 								break;
 							case UIGestureRecognizerState.Cancelled:
 							case UIGestureRecognizerState.Failed:
 								if (pinchGestureRecognizer.IsPinching)
-									pinchGestureRecognizer.SendPinchCanceled(view);
+									basePinchGestureRecognizer.SendPinchCanceled(view, r);
 								break;
 							case UIGestureRecognizerState.Ended:
 								if (pinchGestureRecognizer.IsPinching)
-									pinchGestureRecognizer.SendPinchEnded(view);
+									basePinchGestureRecognizer.SendPinchEnded(view, r);
 								eventTracker._previousScale = 1;
 								break;
 						}
@@ -349,35 +351,36 @@ namespace Microsoft.Maui.Controls.Platform
 					var view = eventTracker?._handler?.VirtualView as View;
 
 					var panGestureRecognizer = weakRecognizer.Target as IPanGestureController;
-					if (panGestureRecognizer != null && view != null)
+					var basePanGestureRecognizer = panGestureRecognizer as PanGestureRecognizer;
+					if (panGestureRecognizer != null && view != null && basePanGestureRecognizer is not null)
 					{
 						switch (r.State)
 						{
 							case UIGestureRecognizerState.Began:
 								if (r.NumberOfTouches != panRecognizer.TouchPoints)
 									return;
-								panGestureRecognizer.SendPanStarted(view, PanGestureRecognizer.CurrentId.Value);
+								basePanGestureRecognizer.SendPanStarted(view, PanGestureRecognizer.CurrentId.Value, r);
 								break;
 							case UIGestureRecognizerState.Changed:
 								if (r.NumberOfTouches != panRecognizer.TouchPoints)
 								{
 									r.State = UIGestureRecognizerState.Ended;
-									panGestureRecognizer.SendPanCompleted(view, PanGestureRecognizer.CurrentId.Value);
+									basePanGestureRecognizer.SendPanCompleted(view, PanGestureRecognizer.CurrentId.Value, r);
 									PanGestureRecognizer.CurrentId.Increment();
 									return;
 								}
 								var translationInView = r.TranslationInView(PlatformView);
-								panGestureRecognizer.SendPan(view, translationInView.X, translationInView.Y, PanGestureRecognizer.CurrentId.Value);
+								basePanGestureRecognizer.SendPan(view, translationInView.X, translationInView.Y, PanGestureRecognizer.CurrentId.Value, r);
 								break;
 							case UIGestureRecognizerState.Cancelled:
 							case UIGestureRecognizerState.Failed:
-								panGestureRecognizer.SendPanCanceled(view, PanGestureRecognizer.CurrentId.Value);
+								basePanGestureRecognizer.SendPanCanceled(view, PanGestureRecognizer.CurrentId.Value, r);
 								PanGestureRecognizer.CurrentId.Increment();
 								break;
 							case UIGestureRecognizerState.Ended:
 								if (r.NumberOfTouches != panRecognizer.TouchPoints)
 								{
-									panGestureRecognizer.SendPanCompleted(view, PanGestureRecognizer.CurrentId.Value);
+									basePanGestureRecognizer.SendPanCompleted(view, PanGestureRecognizer.CurrentId.Value, r);
 									PanGestureRecognizer.CurrentId.Increment();
 								}
 								break;
@@ -406,9 +409,8 @@ namespace Microsoft.Maui.Controls.Platform
 			return result;
 		}
 
-		UISwipeGestureRecognizer CreateSwipeRecognizer(SwipeDirection direction, Action<SwipeDirection> action, int numFingers = 1)
+		UISwipeGestureRecognizer CreateSwipeRecognizer(UISwipeGestureRecognizer result, SwipeDirection direction, Action<SwipeDirection> action, int numFingers = 1)
 		{
-			var result = new UISwipeGestureRecognizer();
 			result.NumberOfTouchesRequired = (uint)numFingers;
 			result.Direction = (UISwipeGestureRecognizerDirection)direction;
 			result.ShouldRecognizeSimultaneously = (g, o) => true;

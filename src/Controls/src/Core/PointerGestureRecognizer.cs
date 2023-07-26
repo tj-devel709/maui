@@ -2,6 +2,13 @@ using System;
 using System.Windows.Input;
 using Microsoft.Maui.Controls.Internals;
 using Microsoft.Maui.Graphics;
+#if IOS
+using RecognizerType = UIKit.UIHoverGestureRecognizer;
+#elif ANDROID
+using RecognizerType = Android.Views.MotionEvent;
+#else
+using RecognizerType = System.Object;
+#endif
 
 namespace Microsoft.Maui.Controls
 {
@@ -119,21 +126,20 @@ namespace Microsoft.Maui.Controls
 		/// <summary>
 		/// For internal use by the .NET MAUI platform.
 		/// </summary>
-		internal void SendPointerEntered(View sender, Func<IElement?, Point?>? getPosition, object? recognizer = null)
+		internal void SendPointerEntered(View sender, Func<IElement?, Point?>? getPosition, RecognizerType? recognizer = null)
 		{
 			ICommand cmd = PointerEnteredCommand;
 			if (cmd?.CanExecute(PointerEnteredCommandParameter) == true)
 				cmd.Execute(PointerEnteredCommandParameter);
 
 			EventHandler<PointerEventArgs>? handler = PointerEntered;
-			var gp = new PointerEventArgs(getPosition, recognizer);
 			handler?.Invoke(sender, new PointerEventArgs(getPosition, recognizer));
 		}
 
 		/// <summary>
 		/// For internal use by the .NET MAUI platform.
 		/// </summary>
-		internal void SendPointerExited(View sender, Func<IElement?, Point?>? getPosition, object? recognizer = null)
+		internal void SendPointerExited(View sender, Func<IElement?, Point?>? getPosition, RecognizerType? recognizer = null)
 		{
 			ICommand cmd = PointerExitedCommand;
 			if (cmd?.CanExecute(PointerExitedCommandParameter) == true)
@@ -146,7 +152,7 @@ namespace Microsoft.Maui.Controls
 		/// <summary>
 		/// For internal use by the .NET MAUI platform.
 		/// </summary>
-		internal void SendPointerMoved(View sender, Func<IElement?, Point?>? getPosition, object? recognizer = null)
+		internal void SendPointerMoved(View sender, Func<IElement?, Point?>? getPosition, RecognizerType? recognizer = null)
 		{
 			ICommand cmd = PointerMovedCommand;
 			if (cmd?.CanExecute(PointerMovedCommandParameter) == true)

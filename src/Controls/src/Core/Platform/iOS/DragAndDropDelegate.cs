@@ -139,7 +139,7 @@ namespace Microsoft.Maui.Controls.Platform
 				if (!rec.CanDrag)
 					return;
 
-				var args = rec.SendDragStarting(element);
+				var args = rec.SendDragStarting(element, rec);
 
 				if (args.Cancel)
 					return;
@@ -199,7 +199,7 @@ namespace Microsoft.Maui.Controls.Platform
 		void HandleDropCompleted(View element)
 		{
 			var args = new DropCompletedEventArgs();
-			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args), element);
+			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args, rec), element);
 		}
 
 		bool HandleDragLeave(View element, DataPackage dataPackage)
@@ -212,6 +212,7 @@ namespace Microsoft.Maui.Controls.Platform
 				if (!rec.AllowDrop)
 					return;
 
+				dragEventArgs._gestureRecognizer = rec;
 				rec.SendDragLeave(dragEventArgs);
 				validTarget = validTarget || dragEventArgs.AcceptedOperation != DataPackageOperation.None;
 			}, element);
@@ -229,6 +230,7 @@ namespace Microsoft.Maui.Controls.Platform
 				if (!rec.AllowDrop)
 					return;
 
+				dragEventArgs._gestureRecognizer = rec;
 				rec.SendDragOver(dragEventArgs);
 				validTarget = validTarget || dragEventArgs.AcceptedOperation != DataPackageOperation.None;
 			}, element);
@@ -246,6 +248,7 @@ namespace Microsoft.Maui.Controls.Platform
 
 				try
 				{
+					args._gestureRecognizer = rec;
 					await rec.SendDrop(args);
 				}
 				catch (Exception dropExc)

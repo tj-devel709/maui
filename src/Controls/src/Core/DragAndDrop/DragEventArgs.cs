@@ -13,9 +13,16 @@ namespace Microsoft.Maui.Controls
 			AcceptedOperation = DataPackageOperation.Copy;
 		}
 
+		internal DragEventArgs(DataPackage dataPackage, object recognizer) : this(dataPackage)
+		{
+			_gestureRecognizer = recognizer;
+		}
+
 		/// <include file="../../../docs/Microsoft.Maui.Controls/DragEventArgs.xml" path="//Member[@MemberName='Data']/Docs/*" />
 		public DataPackage Data { get; }
 		/// <include file="../../../docs/Microsoft.Maui.Controls/DragEventArgs.xml" path="//Member[@MemberName='AcceptedOperation']/Docs/*" />
 		public DataPackageOperation AcceptedOperation { get; set; }
+
+		internal object _gestureRecognizer;
 	}
 }

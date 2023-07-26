@@ -3,4 +3,32 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="Maui.Controls.Sample.MainPage"
     xmlns:local="clr-namespace:Maui.Controls.Sample">
+
+    <VerticalStackLayout>
+        <Label Text="Label" HeightRequest="300" WidthRequest="300" Background="blue">
+            <Label.GestureRecognizers>
+                <PointerGestureRecognizer PointerEntered="PointerGestureRecognizer_PointerEntered" />
+                <!--<TapGestureRecognizer Tapped="TapGestureRecognizer_Tapped" />
+                <SwipeGestureRecognizer Direction="Right" Swiped="SwipeGestureRecognizer_Swiped" />
+                <PinchGestureRecognizer PinchUpdated="PinchGestureRecognizer_PinchUpdated" />
+                <PanGestureRecognizer PanUpdated="PanGestureRecognizer_PanUpdated" />
+                <DragGestureRecognizer CanDrag="True" DragStarting="DragGestureRecognizer_DragStarting" />
+                <DropGestureRecognizer Drop="DropGestureRecognizer_Drop" DragLeave="DropGestureRecognizer_DragLeave"
+                                       DragOver="DropGestureRecognizer_DragOver"/>-->
+            </Label.GestureRecognizers>
+        </Label>
+
+        <Label Text="Label2" HeightRequest="300" WidthRequest="300" Background="blue">
+            <!--<Label.GestureRecognizers>
+                <PointerGestureRecognizer PointerEntered="PointerGestureRecognizer_PointerEntered" />
+                <TapGestureRecognizer Tapped="TapGestureRecognizer_Tapped" />
+                <SwipeGestureRecognizer Direction="Right" Swiped="SwipeGestureRecognizer_Swiped" />
+                <PinchGestureRecognizer PinchUpdated="PinchGestureRecognizer_PinchUpdated" />
+                <PanGestureRecognizer PanUpdated="PanGestureRecognizer_PanUpdated" />
+                <DragGestureRecognizer CanDrag="True" DragStarting="DragGestureRecognizer_DragStarting" />
+                <DropGestureRecognizer Drop="DropGestureRecognizer_Drop" DragLeave="DropGestureRecognizer_DragLeave"
+                                       DragOver="DropGestureRecognizer_DragOver"/>
+            </Label.GestureRecognizers>-->
+        </Label>
+    </VerticalStackLayout>
 </ContentPage>

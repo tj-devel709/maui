@@ -7,5 +7,6 @@ namespace Microsoft.Maui.Controls
 	public class DropCompletedEventArgs : EventArgs
 	{
 		DataPackageOperation DropResult { get; }
+		internal object _gestureRecognizer;
 	}
 }

@@ -73,7 +73,7 @@ namespace Microsoft.Maui.Controls
 			set { SetValue(DragStartingCommandParameterProperty, value); }
 		}
 
-		internal void SendDropCompleted(DropCompletedEventArgs args)
+		internal void SendDropCompleted(DropCompletedEventArgs args, object recognizer = null)
 		{
 			if (!_isDragActive)
 			{
@@ -86,13 +86,14 @@ namespace Microsoft.Maui.Controls
 			_isDragActive = false;
 			_ = args ?? throw new ArgumentNullException(nameof(args));
 
+			args._gestureRecognizer = recognizer;
 			DropCompletedCommand?.Execute(DropCompletedCommandParameter);
 			DropCompleted?.Invoke(this, args);
 		}
 
-		internal DragStartingEventArgs SendDragStarting(IView element)
+		internal DragStartingEventArgs SendDragStarting(IView element, object recognizer = null)
 		{
-			var args = new DragStartingEventArgs();
+			var args = new DragStartingEventArgs(recognizer);
 
 			DragStartingCommand?.Execute(DragStartingCommandParameter);
 			DragStarting?.Invoke(this, args);

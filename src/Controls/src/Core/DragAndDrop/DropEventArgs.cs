@@ -13,9 +13,16 @@ namespace Microsoft.Maui.Controls
 			Data = view;
 		}
 
+		internal DropEventArgs(DataPackageView view, object recognizer) : this(view)
+		{
+			_gestureRecognizer = recognizer;
+		}
+
 		/// <include file="../../../docs/Microsoft.Maui.Controls/DropEventArgs.xml" path="//Member[@MemberName='Data']/Docs/*" />
 		public DataPackageView Data { get; }
 		/// <include file="../../../docs/Microsoft.Maui.Controls/DropEventArgs.xml" path="//Member[@MemberName='Handled']/Docs/*" />
 		public bool Handled { get; set; }
+
+		internal object _gestureRecognizer;
 	}
 }
