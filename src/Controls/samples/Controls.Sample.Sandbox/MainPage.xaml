@@ -7,7 +7,7 @@
     <VerticalStackLayout>
         <Label Text="Label" HeightRequest="300" WidthRequest="300" Background="blue">
             <Label.GestureRecognizers>
-                <PointerGestureRecognizer PointerEntered="PointerGestureRecognizer_PointerEntered" />
+                <PointerGestureRecognizer PointerEntered="PointerGestureRecognizer_PointerEntered" PointerExited="PointerGestureRecognizer_PointerExited" PointerMoved="PointerGestureRecognizer_PointerMoved" />
                 <!--<TapGestureRecognizer Tapped="TapGestureRecognizer_Tapped" />
                 <SwipeGestureRecognizer Direction="Right" Swiped="SwipeGestureRecognizer_Swiped" />
                 <PinchGestureRecognizer PinchUpdated="PinchGestureRecognizer_PinchUpdated" />

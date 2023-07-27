@@ -15,8 +15,8 @@ public class PointerPlatformEventArgs
 	}
 
 #elif ANDROID
-    public Android.Views.View Sender { get; }
-    public Android.Views.MotionEvent MotionEvent { get; }
+	public Android.Views.View Sender { get; }
+	public Android.Views.MotionEvent MotionEvent { get; }
 
 	public PointerPlatformEventArgs(Android.Views.View sender, Android.Views.MotionEvent motionEvent)
 	{
@@ -25,8 +25,14 @@ public class PointerPlatformEventArgs
 	}
 
 #elif WINDOWS
-    public Microsoft.UI.Xaml.FrameworkElement? Sender { get; }
-    public Microsoft.UI.Xaml.RoutedEventArgs? RoutedEventArgs { get; }
+	public Microsoft.UI.Xaml.FrameworkElement? Sender { get; }
+	public Microsoft.UI.Xaml.RoutedEventArgs? RoutedEventArgs { get; }
+
+	public PointerPlatformEventArgs(Microsoft.UI.Xaml.FrameworkElement? sender, Microsoft.UI.Xaml.RoutedEventArgs routedEventArgs)
+	{
+		Sender = sender;
+		RoutedEventArgs = routedEventArgs;
+	}
 #endif
 }
 

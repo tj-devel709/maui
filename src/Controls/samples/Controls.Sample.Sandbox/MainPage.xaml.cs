@@ -18,7 +18,6 @@ namespace Maui.Controls.Sample
 
 		void PointerGestureRecognizer_PointerEntered(System.Object sender, Microsoft.Maui.Controls.PointerEventArgs e)
 		{
-			// sender is Label control
 			var t = PointerEventArgsExtensions.ToPlatform(e);
 		}
 
@@ -79,6 +78,16 @@ namespace Maui.Controls.Sample
 #if MACCATALYST
 			var t = DragEventArgsExtensions.ToPlatform(e);
 #endif
+		}
+
+		private void PointerGestureRecognizer_PointerExited(object sender, PointerEventArgs e)
+		{
+			var t = PointerEventArgsExtensions.ToPlatform(e);
+		}
+
+		private void PointerGestureRecognizer_PointerMoved(object sender, PointerEventArgs e)
+		{
+			var t = PointerEventArgsExtensions.ToPlatform(e);
 		}
 	}
 }
