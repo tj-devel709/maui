@@ -1,14 +1,6 @@
 using System;
 using Microsoft.Maui.Graphics;
 
-#if IOS
-using RecognizerType = UIKit.UIHoverGestureRecognizer;
-#elif ANDROID
-using RecognizerType = Android.Views.MotionEvent;
-#else
-using RecognizerType = System.Object;
-#endif
-
 namespace Microsoft.Maui.Controls
 {
 	/// <summary>
@@ -18,20 +10,17 @@ namespace Microsoft.Maui.Controls
 	{
 
 		Func<IElement?, Point?>? _getPosition;
-		//internal object? _gestureRecognizer;
-
 #pragma warning disable RS0016 // Add public types and members to the declared API
-		public RecognizerType? Recognizer { get; set; }
-#pragma warning restore RS0016 // Add public types and members to the declared API
+		public PointerPlatformEventArgs? Args { get; set; }
 
 		public PointerEventArgs()
 		{
 		}
 
-		internal PointerEventArgs(Func<IElement?, Point?>? getPosition, RecognizerType? recognizer = null)
+		internal PointerEventArgs(Func<IElement?, Point?>? getPosition, PointerPlatformEventArgs? args = null)
 		{
 			_getPosition = getPosition;
-			Recognizer = recognizer;
+			Args = args;
 		}
 
 		public virtual Point? GetPosition(Element? relativeTo) =>

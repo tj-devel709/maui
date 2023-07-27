@@ -244,19 +244,20 @@ namespace Microsoft.Maui.Controls.Platform
 						eventTracker._handler?.MauiContext?.GetPlatformWindow() is UIWindow window)
 					{
 						var originPoint = r.LocationInView(eventTracker?.PlatformView);
+						var platformPointerArgs = new PointerPlatformEventArgs(r.View, r);
 
 						switch (r.State)
 						{
 							case UIGestureRecognizerState.Began:
-								pointerGestureRecognizer.SendPointerEntered(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), r);
+								pointerGestureRecognizer.SendPointerEntered(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), platformPointerArgs);
 								break;
 							case UIGestureRecognizerState.Changed:
-								pointerGestureRecognizer.SendPointerMoved(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), r);
+								pointerGestureRecognizer.SendPointerMoved(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), platformPointerArgs);
 								break;
 							case UIGestureRecognizerState.Cancelled:
 							case UIGestureRecognizerState.Failed:
 							case UIGestureRecognizerState.Ended:
-								pointerGestureRecognizer.SendPointerExited(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), r);
+								pointerGestureRecognizer.SendPointerExited(view, (relativeTo) => CalculatePosition(relativeTo, originPoint, weakRecognizer, weakEventTracker), platformPointerArgs);
 								break;
 						}
 					}
