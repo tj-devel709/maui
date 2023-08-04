@@ -11,6 +11,34 @@ using UIKit;
 
 namespace Microsoft.Maui.Platform
 {
+#pragma warning disable RS0016 // Add public types and members to the declared API
+
+	public class CustomUIWindow : UIWindow
+	{
+		public CustomUIWindow()
+		{
+		}
+
+		public CustomUIWindow(UIWindowScene scene) : base(scene)
+		{
+		}
+
+		public override void PressesBegan(NSSet<UIPress> presses, UIPressesEvent evt)
+		{
+			base.PressesBegan(presses, evt);
+
+			foreach (UIPress press in presses)
+			{
+				if (press.Key is UIKey key)
+				{
+					Console.WriteLine($"From CustomUIWindow: {key.KeyCode}");
+				}
+			}
+		}
+	}
+#pragma warning restore RS0016 // Add public types and members to the declared API
+
+
 	public static class ApplicationExtensions
 	{
 		[SupportedOSPlatform("ios13.0")]
@@ -92,9 +120,9 @@ namespace Microsoft.Maui.Platform
 
 			var uiWindow = windowScene is not null
 #pragma warning disable CA1416 // UIWindow(windowScene) is only supported on: ios 13.0 and later
-				? new UIWindow(windowScene)
+				? new CustomUIWindow(windowScene)
 #pragma warning restore CA1416
-				: new UIWindow();
+				: new CustomUIWindow();
 
 			var mauiContext = applicationContext.MakeWindowScope(uiWindow, out var windowScope);
 
