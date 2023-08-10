@@ -1,4 +1,5 @@
-﻿using Microsoft.Maui;
+﻿using CommunityToolkit.Maui;
+using Microsoft.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
@@ -12,7 +13,9 @@ namespace Maui.Controls.Sample
 				.CreateBuilder()
 				.UseMauiMaps()
 				.UseMauiApp<App>()
+				.UseMauiCommunityToolkit()
 				.Build();
+
 	}
 
 	class App : Application

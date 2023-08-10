@@ -2,5 +2,25 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="Maui.Controls.Sample.MainPage"
-    xmlns:local="clr-namespace:Maui.Controls.Sample">
+    xmlns:local="clr-namespace:Maui.Controls.Sample"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
+
+    <!--<VerticalStackLayout>
+        <Entry Placeholder="Entry" ReturnType="Next"/>
+        <Editor Placeholder="Editor" />
+        <Entry Placeholder="Entry"/>
+        <Entry Placeholder="Entry" ReturnType="Next"/>
+        <Button Text="Button" x:Name="button" Background="blue" Pressed="button_Pressed"/>
+        <Button Text="Button" x:Name="button2" Background="blue" Pressed="button_Pressed_1" Focused="button2_Focused"/>
+        <Label Text="0" x:Name="label"/>
+    </VerticalStackLayout>-->
+
+    <VerticalStackLayout>
+            <!--<BoxView HeightRequest="600" Background="silver" />
+            <Editor HeightRequest="200" Text="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting,Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, re remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+                    />
+            <BoxView HeightRequest="600" Background="silver" />-->
+            <Button Text="Button" Pressed="Button_Pressed" />
+        </VerticalStackLayout>
+
 </ContentPage>
