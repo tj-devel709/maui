@@ -18,20 +18,6 @@ namespace Maui.Controls.Sample
 
 		}
 
-		//void button_Pressed(System.Object sender, System.EventArgs e)
-		//{
-		//	button2.Focus();
-		//}
-
-		//void button_Pressed_1(System.Object sender, System.EventArgs e)
-		//				{
-		//	label.Text = label.Text + "1";
-		//}
-
-		void button2_Focused(System.Object sender, Microsoft.Maui.Controls.FocusEventArgs e)
-		{
-		}
-
 		public void DisplayPopup()
 		{
 			var popup = new SimplePopup();
@@ -44,8 +30,29 @@ namespace Maui.Controls.Sample
 			DisplayPopup();
 		}
 
-		void Button_Pressed_1(System.Object sender, System.EventArgs e)
+		async void Button_Pressed21(System.Object sender, System.EventArgs e)
 		{
+			await Navigation.PushModalAsync(new MauiModalPage_FullScreen());
+		}
+
+		async void Button_Pressed_11(System.Object sender, System.EventArgs e)
+		{
+			await Navigation.PushModalAsync(new MauiModalPage_PageSheet());
+		}
+
+		async void Button_Pressed_21(System.Object sender, System.EventArgs e)
+		{
+			await Navigation.PushModalAsync(new MauiModalPage_FormSheet());
+		}
+
+		async void Button_Pressed_31(System.Object sender, System.EventArgs e)
+		{
+			await Navigation.PushModalAsync(new MauiModalPage_OverFullScreen());
+		}
+
+		async void Button_Pressed_41(System.Object sender, System.EventArgs e)
+		{
+			await Navigation.PushModalAsync(new MauiModalPage_Automatic());
 		}
 	}
 }

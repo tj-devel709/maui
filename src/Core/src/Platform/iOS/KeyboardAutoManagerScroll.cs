@@ -94,6 +94,9 @@ public static class KeyboardAutoManagerScroll
 		{
 			View = notification.Object as UIView;
 
+			var v = View?.FindResponder<UIViewController>();
+			//v.ModalPresentationStyle = UIModalPresentationStyle.Popover;
+
 			if (View is null || View.FindResponder<UIAlertController>() is not null)
 			{
 				IsKeyboardAutoScrollHandling = false;
@@ -318,22 +321,27 @@ public static class KeyboardAutoManagerScroll
 		bool cursorTooHigh = false;
 		bool cursorTooLow = false;
 
-		if (cursorRect.Y >= viewRectInWindow.GetMaxY())
+		// We only need to worry about the text scrolled off the view
+		// if the view is a UITextView
+		if (View is UITextView)
 		{
-			cursorNotInViewScroll = viewRectInWindow.GetMaxY() - cursorRect.GetMaxY();
-			move = cursorRect.Y - keyboardYPosition + cursorNotInViewScroll;
-			cursorTooLow = true;
-		}
+			if (cursorRect.Y >= viewRectInWindow.GetMaxY())
+			{
+				cursorNotInViewScroll = viewRectInWindow.GetMaxY() - cursorRect.GetMaxY();
+				move = cursorRect.Y - keyboardYPosition + cursorNotInViewScroll;
+				cursorTooLow = true;
+			}
 
-		else if (cursorRect.Y < viewRectInWindow.GetMinY())
-		{
-			cursorNotInViewScroll = viewRectInWindow.GetMinY() - cursorRect.Y;
-			move = cursorRect.Y - keyboardYPosition + cursorNotInViewScroll;
-			cursorTooHigh = true;
+			else if (cursorRect.Y < viewRectInWindow.GetMinY())
+			{
+				cursorNotInViewScroll = viewRectInWindow.GetMinY() - cursorRect.Y;
+				move = cursorRect.Y - keyboardYPosition + cursorNotInViewScroll;
+				cursorTooHigh = true;
 
-			// no need to move the screen down if we can already see the view
-			if (move < 0)
-				move = 0;
+				// no need to move the screen down if we can already see the view
+				if (move < 0)
+					move = 0;
+			}
 		}
 
 		else if (cursorRect.Y >= topLayoutGuide && cursorRect.Y < keyboardYPosition)

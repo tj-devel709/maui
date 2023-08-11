@@ -17,8 +17,11 @@
     <_FastDeploymentDiagnosticLogging>True</_FastDeploymentDiagnosticLogging>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-ios|AnyCPU'">
+    <CreatePackage>false</CreatePackage>
+  </PropertyGroup>
   <ItemGroup Condition=" '$(UseMaui)' != 'true' ">
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(UseMaui)' != 'true' ">

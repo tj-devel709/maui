@@ -36,9 +36,12 @@ namespace Microsoft.Maui.Controls.Platform
 					if (modalBkgndColor?.Alpha < 1)
 						result = UIKit.UIModalPresentationStyle.OverFullScreen;
 				}
-
+				// Todo play here
 				ModalPresentationStyle = result;
 			}
+
+			// TODO compare the Maui Model with .popover to the MCT modal 
+			//ModalPresentationStyle = UIKit.UIModalPresentationStyle.Popover;
 
 			UpdateBackgroundColor();
 			_ = modal?.ViewController?.View ?? throw new InvalidOperationException("View Controller Not Initialized on Modal Page");

@@ -5,7 +5,7 @@
 
     <VerticalStackLayout>
         <Entry Text="Top Entry" ReturnType="Next"/>
-        <BoxView HeightRequest="400" Color="green"/>
+        <BoxView HeightRequest="700" Color="green"/>
         <Entry Text="Bottom Entry" ReturnType="Next"/>
     </VerticalStackLayout>
 </toolkit:Popup>
