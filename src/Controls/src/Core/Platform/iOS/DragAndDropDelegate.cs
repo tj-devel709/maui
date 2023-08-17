@@ -30,7 +30,7 @@ namespace Microsoft.Maui.Controls.Platform
 				session.Items.Length > 0 &&
 				session.Items[0].LocalObject is CustomLocalStateData cdi)
 			{
-				this.HandleDropCompleted(cdi.View);
+				this.HandleDropCompleted(cdi.View, new PlatformDropCompletedEventArgs(cdi.View.Handler.PlatformView as UIView, interaction, session, operation));
 			}
 		}
 
@@ -110,7 +110,7 @@ namespace Microsoft.Maui.Controls.Platform
 				_viewHandler.VirtualView is View view)
 			{
 				HandleDrop(view, cdi.DataPackage);
-				HandleDropCompleted(cdi.View);
+				HandleDropCompleted(cdi.View, new PlatformDropCompletedEventArgs(cdi.View.Handler.PlatformView as UIView, interaction, session));
 			}
 		}
 
@@ -196,9 +196,10 @@ namespace Microsoft.Maui.Controls.Platform
 			return returnValue ?? new UIDragItem[0];
 		}
 
-		void HandleDropCompleted(View element)
+		void HandleDropCompleted(View element, PlatformDropCompletedEventArgs platformArgs)
 		{
 			var args = new DropCompletedEventArgs();
+			args.PlatformArgs = platformArgs;
 			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args), element);
 		}
 

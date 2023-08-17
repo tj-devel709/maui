@@ -123,6 +123,8 @@ namespace Microsoft.Maui.Controls.Platform
 				_currentCustomLocalStateData.DataPackage = package;
 			}
 
+			var platformArgs = new PlatformDropCompletedEventArgs(v, e);
+
 			switch (e.Action)
 			{
 				case DragAction.Ended:
@@ -130,7 +132,7 @@ namespace Microsoft.Maui.Controls.Platform
 						_currentCustomLocalStateData = null;
 						if (dragSourceElement is View vSource)
 						{
-							HandleDropCompleted(vSource);
+							HandleDropCompleted(vSource, platformArgs);
 						}
 					}
 					break;
@@ -155,9 +157,10 @@ namespace Microsoft.Maui.Controls.Platform
 			return true;
 		}
 
-		void HandleDropCompleted(View element)
+		void HandleDropCompleted(View element, PlatformDropCompletedEventArgs platformArgs)
 		{
 			var args = new DropCompletedEventArgs();
+			args.PlatformArgs = platformArgs;
 			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args), element);
 		}
 

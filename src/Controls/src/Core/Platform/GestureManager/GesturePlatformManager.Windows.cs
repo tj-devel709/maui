@@ -186,6 +186,7 @@ namespace Microsoft.Maui.Controls.Platform
 		void HandleDropCompleted(UIElement sender, Microsoft.UI.Xaml.DropCompletedEventArgs e)
 		{
 			var args = new DropCompletedEventArgs();
+			args.PlatformArgs = new PlatformDropCompletedEventArgs(sender, e);
 			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args));
 		}
 
