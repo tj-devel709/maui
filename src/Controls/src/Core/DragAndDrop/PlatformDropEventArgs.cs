@@ -53,14 +53,14 @@ public class PlatformDropEventArgs
 	/// <summary>
 	/// Gets the native view attached to the event.
 	/// </summary>
-	public Microsoft.UI.Xaml.UIElement Sender { get; }
+	public object Sender { get; }
 
 	/// <summary>
 	/// Gets data for drag and drop events.
 	/// </summary>
 	public Microsoft.UI.Xaml.DragEventArgs DragEventArgs { get; }
 
-	internal PlatformDropEventArgs(Microsoft.UI.Xaml.UIElement sender,
+	internal PlatformDropEventArgs(object sender,
 		Microsoft.UI.Xaml.DragEventArgs dragEventArgs)
 	{
 		Sender = sender;
@@ -68,7 +68,7 @@ public class PlatformDropEventArgs
 	}
 
 #else
-	internal PlatformDragEventArgs()
+	internal PlatformDropEventArgs()
 	{
 	}
 #endif

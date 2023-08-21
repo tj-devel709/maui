@@ -108,7 +108,7 @@ public class PlatformDropCompletedEventArgs
 	}
 
 #else
-	internal PlatformDragEventArgs()
+	internal PlatformDropCompletedEventArgs()
 	{
 	}
 #endif

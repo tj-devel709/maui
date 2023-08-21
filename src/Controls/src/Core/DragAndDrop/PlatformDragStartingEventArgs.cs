@@ -130,7 +130,7 @@ public class PlatformDragStartingEventArgs
 	}
 
 #else
-	internal PlatformDragEventArgs()
+	internal PlatformDragStartingEventArgs()
 	{
 	}
 #endif
