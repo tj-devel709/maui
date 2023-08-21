@@ -48,7 +48,7 @@ public class PlatformDragStartingEventArgs
 	/// <summary>
 	/// Sets the preview provider when dragging begins.
 	/// </summary>
-	/// <param name="itemProvider">The custom preview provider to use.</param>
+	/// <param name="previewProvider">The custom preview provider to use.</param>
 	public void SetPreviewProvider(Func<UIKit.UIDragPreview?> previewProvider)
 	{
 		_previewProvider = previewProvider;
