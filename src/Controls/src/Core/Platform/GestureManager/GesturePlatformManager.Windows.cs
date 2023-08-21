@@ -192,7 +192,7 @@ namespace Microsoft.Maui.Controls.Platform
 			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args));
 		}
 
-		void HandleDrop(object sender, Microsoft.UI.Xaml.DragEventArgs e, PlatformDropEventArgs platformArgs)
+		void HandleDrop(object sender, Microsoft.UI.Xaml.DragEventArgs e)
 		{
 			var datapackage = e.DataView.Properties["_XFPropertes_DONTUSE"] as DataPackage;
 			VisualElement? element = null;
@@ -204,7 +204,7 @@ namespace Microsoft.Maui.Controls.Platform
 			}
 
 			var args = new DropEventArgs(datapackage?.View);
-			args.PlatformArgs = platformArgs;
+			args.PlatformArgs = new PlatformDropEventArgs(sender, e);
 			SendEventArgs<DropGestureRecognizer>(async rec =>
 			{
 				if (!rec.AllowDrop)

@@ -90,7 +90,7 @@ namespace Microsoft.Maui.Controls
 			DropCompleted?.Invoke(this, args);
 		}
 
-		internal DragStartingEventArgs SendDragStarting(IView element, PlatformDragStartingEventArgs platformArgs)
+		internal DragStartingEventArgs SendDragStarting(IView element, PlatformDragStartingEventArgs platformArgs = null)
 		{
 			var args = new DragStartingEventArgs();
 			args.PlatformArgs = platformArgs;
