@@ -66,5 +66,10 @@ public class PlatformDropEventArgs
 		Sender = sender;
 		DragEventArgs = dragEventArgs;
 	}
+
+#else
+	internal PlatformDragEventArgs()
+	{
+	}
 #endif
 }

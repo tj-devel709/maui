@@ -106,5 +106,10 @@ public class PlatformDropCompletedEventArgs
 		Sender = sender;
 		DropCompletedEventArgs = dropCompletedEventArgs;
 	}
+
+#else
+	internal PlatformDragEventArgs()
+	{
+	}
 #endif
 }

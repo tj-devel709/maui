@@ -128,5 +128,10 @@ public class PlatformDragStartingEventArgs
 		Sender = sender;
 		DragStartingEventArgs = dragStartingEventArgs;
 	}
+
+#else
+	internal PlatformDragEventArgs()
+	{
+	}
 #endif
 }
