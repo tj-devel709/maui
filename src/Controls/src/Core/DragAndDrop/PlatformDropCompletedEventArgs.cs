@@ -2,18 +2,58 @@
 namespace Microsoft.Maui.Controls;
 
 #pragma warning disable RS0016 // Add public types and members to the declared API
+/// <summary>
+/// Platform-specific arguments associated with the DropCompletedEventArgs
+/// </summary>
 public class PlatformDropCompletedEventArgs
 {
 #if IOS || MACCATALYST
-	public UIKit.UIView? Sender { get; set; }
-	// If coming from SessionWillEnd(UIDragInteraction interaction, IUIDragSession session, UIDropOperation operation)
-	public UIKit.UIDragInteraction? DragInteraction { get; set; }
-	public UIKit.IUIDragSession? DragSession { get; set; }
-	public UIKit.UIDropOperation? DropOperation { get; set; }
+	/// <summary>
+	/// Gets the native view attached to the event.
+	/// </summary>
+	public UIKit.UIView? Sender { get; }
 
-	// If coming from PerformDrop(UIDropInteraction interaction, IUIDropSession session)
-	public UIKit.UIDropInteraction? DropInteraction { get; set; }
-	public UIKit.IUIDropSession? DropSession { get; set; }
+	// If coming from SessionWillEnd(UIDragInteraction interaction, IUIDragSession session, UIDropOperation operation)
+
+	/// <summary>
+	/// Gets the interaction used for dragging items.
+	/// </summary>
+	/// /// <remarks>
+	/// This property is used when <see cref="PlatformDropCompletedEventArgs"/> is called from the SessionWillEnd method.
+	/// </remarks>
+	public UIKit.UIDragInteraction? DragInteraction { get; }
+
+	/// <summary>
+	/// Gets the associated information from the drag session.
+	/// </summary>
+	/// <remarks>
+	/// This property is used when <see cref="PlatformDropCompletedEventArgs"/> is called from the SessionWillEnd method.
+	/// </remarks>
+	public UIKit.IUIDragSession? DragSession { get; }
+
+	/// <summary>
+	/// Gets the value representing the response to a drop.
+	/// </summary>
+	/// <remarks>
+	/// This property is used when <see cref="PlatformDropCompletedEventArgs"/> is called from the SessionWillEnd method.
+	/// </remarks>
+	public UIKit.UIDropOperation? DropOperation { get; }
+
+	/// <summary>
+	/// Gets the interaction used for dropping items.
+	/// </summary>
+	/// /// <remarks>
+	/// This property is used when <see cref="PlatformDropCompletedEventArgs"/> is called from the PerformDrop method.
+	/// </remarks>
+	public UIKit.UIDropInteraction? DropInteraction { get; }
+
+	/// <summary>
+	/// Gets the associated information from the drop session.
+	/// </summary>
+	/// <remarks>
+	/// This property is used when <see cref="PlatformDropCompletedEventArgs"/> is called from the PerformDrop method.
+	/// </remarks>
+	public UIKit.IUIDropSession? DropSession { get; }
 
 	internal PlatformDropCompletedEventArgs(UIKit.UIView? sender, UIKit.UIDragInteraction dragInteraction,
 		UIKit.IUIDragSession dragSession, UIKit.UIDropOperation dropOperation)
@@ -25,7 +65,7 @@ public class PlatformDropCompletedEventArgs
 	}
 
 	internal PlatformDropCompletedEventArgs(UIKit.UIView? sender, UIKit.UIDropInteraction dropInteraction,
-		UIKit.IUIDropSession? dropSession)
+		UIKit.IUIDropSession dropSession)
 	{
 		Sender = sender;
 		DropInteraction = dropInteraction;
@@ -33,8 +73,15 @@ public class PlatformDropCompletedEventArgs
 	}
 
 #elif ANDROID
-	public Android.Views.View Sender { get; set; }
-	public Android.Views.DragEvent DragEvent { get; set; }
+	/// <summary>
+	/// Gets the native view attached to the event.
+	/// </summary>
+	public Android.Views.View Sender { get; }
+
+	/// <summary>
+	/// Gets the event containing information for drag and drop status.
+	/// </summary>
+	public Android.Views.DragEvent DragEvent { get; }
 
 	internal PlatformDropCompletedEventArgs(Android.Views.View sender, Android.Views.DragEvent dragEvent)
 	{
@@ -43,10 +90,15 @@ public class PlatformDropCompletedEventArgs
 	}
 
 #elif WINDOWS
+	/// <summary>
+	/// Gets the native view attached to the event.
+	/// </summary>
+	public Microsoft.UI.Xaml.UIElement Sender { get; }
 
-	// double check the class
-	public Microsoft.UI.Xaml.UIElement Sender { get; set; }
-	public Microsoft.UI.Xaml.DropCompletedEventArgs DropCompletedEventArgs { get; set; }
+	/// <summary>
+	/// Gets data for the DropCompleted event.
+	/// </summary>
+	public Microsoft.UI.Xaml.DropCompletedEventArgs DropCompletedEventArgs { get; }
 
 	internal PlatformDropCompletedEventArgs(Microsoft.UI.Xaml.UIElement sender,
 		Microsoft.UI.Xaml.DropCompletedEventArgs dropCompletedEventArgs)
