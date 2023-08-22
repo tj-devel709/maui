@@ -68,8 +68,8 @@ namespace Microsoft.Maui.AppiumTests
 			App.EnterText("TargetView", "DragAndDropEventArgs");
 			App.Tap("GoButton");
 
-			App.WaitForElement("Red");
-			App.DragAndDrop("Red", "Green");
+			App.WaitForElement("LabelDragElement");
+			App.DragAndDrop("LabelDragElement", "DragTarget");
 			App.WaitForElement("DragEventsLabel");
 
 			var textAfterDrag = App.Query("DragEventsLabel").First().Text;
