@@ -5,19 +5,37 @@
     xmlns:local="clr-namespace:Maui.Controls.Sample">
 
     <StackLayout>
-        <Label HeightRequest="300" WidthRequest="300" Background="green">
+        <Image HeightRequest="100" WidthRequest="100" Source="dotnet_bot.png" Background="gray">
+            <Image.GestureRecognizers>
+                <DragGestureRecognizer CanDrag="True"/>
+            </Image.GestureRecognizers>
+        </Image>
+
+        <Image HeightRequest="100" WidthRequest="100" Background="gray">
+            <Image.GestureRecognizers>
+                <DropGestureRecognizer AllowDrop="True"/>
+            </Image.GestureRecognizers>
+        </Image>
+
+        <Label HeightRequest="300" WidthRequest="300" Background="green" Text="Text to transfer!" >
             <Label.GestureRecognizers>
                 <DragGestureRecognizer CanDrag="True" DragStarting="DragGestureRecognizer_DragStarting"
                                        DropCompleted="DragGestureRecognizer_DropCompleted"/>
             </Label.GestureRecognizers>
         </Label>
 
-        <Label HeightRequest="300" WidthRequest="300" Background="blue">
+        <Label HeightRequest="300" WidthRequest="300" Background="blue" Text="Not Transferable">
             <Label.GestureRecognizers>
                 <DropGestureRecognizer Drop="DropGestureRecognizer_Drop"
                                        AllowDrop="True"
                                        DragLeave="DropGestureRecognizer_DragLeave"
                                        DragOver="DropGestureRecognizer_DragOver"/>
+            </Label.GestureRecognizers>
+        </Label>
+
+        <Label HeightRequest="300" WidthRequest="300" Background="Pink" Text="Transferable">
+            <Label.GestureRecognizers>
+                <DropGestureRecognizer AllowDrop="True"/>
             </Label.GestureRecognizers>
         </Label>
 
