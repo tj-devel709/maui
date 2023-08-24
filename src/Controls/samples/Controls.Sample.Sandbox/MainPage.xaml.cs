@@ -15,4 +15,18 @@ namespace Maui.Controls.Sample
 			InitializeComponent();
 		}
 	}
+
+	void DropGestureRecognizer_DragOver2(System.Object sender, Microsoft.Maui.Controls.DragEventArgs e)
+	{
+#if IOS || MACCATALYST
+		e.PlatformArgs.SetDropProposal(new UIKit.UIDropProposal(UIKit.UIDropOperation.Move));
+#endif
+	}
+
+	void DropGestureRecognizer_DragOver3(System.Object sender, Microsoft.Maui.Controls.DragEventArgs e)
+	{
+#if IOS || MACCATALYST
+		e.PlatformArgs.SetDropProposal(new UIKit.UIDropProposal(UIKit.UIDropOperation.Copy));
+#endif
+	}
 }
