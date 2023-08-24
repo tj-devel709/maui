@@ -13,7 +13,7 @@
 
         <Image HeightRequest="100" WidthRequest="100" Background="gray">
             <Image.GestureRecognizers>
-                <DropGestureRecognizer AllowDrop="True" DragOver="DropGestureRecognizer_DragOver2"/>
+                <DropGestureRecognizer AllowDrop="True" DragOver="DropGestureRecognizer_DragOver"/>
             </Image.GestureRecognizers>
         </Image>
 
@@ -37,14 +37,14 @@
             <Label HeightRequest="100" WidthRequest="100" Background="yellow" Text="Move">
                 <Label.GestureRecognizers>
                     <DropGestureRecognizer AllowDrop="True"
-                                       DragOver="DropGestureRecognizer_DragOver2"/>
+                                       DragOver="DropGestureRecognizer_DragOver"/>
                 </Label.GestureRecognizers>
             </Label>
 
             <Label HeightRequest="100" WidthRequest="100" Background="Pink" Text="Copy">
                 <Label.GestureRecognizers>
                     <DropGestureRecognizer AllowDrop="True"
-                                       DragOver="DropGestureRecognizer_DragOver3"/>
+                                       DragOver="DropGestureRecognizer_DragOver"/>
                 </Label.GestureRecognizers>
             </Label>
         </HorizontalStackLayout>
