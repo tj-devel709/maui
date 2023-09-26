@@ -23,15 +23,16 @@ public class PlatformDragEventArgs
 	public UIKit.IUIDropSession DropSession { get; }
 
 	internal UIKit.UIDropProposal? DropProposal { get; private set; }
+	internal Action<UIKit.UIDropInteraction, UIKit.IUIDropSession>? SessionDidEnter { get; private set; }
 
-	static bool IsCounted = false;
+	//static bool IsCounted = false;
 
 	internal PlatformDragEventArgs(UIKit.UIView? sender, UIKit.UIDropInteraction dropInteraction,
 		UIKit.IUIDropSession dropSession)
 	{
-		if (!IsCounted)
+		//if (!IsCounted)
 			Console.WriteLine("CREATING PlatformDragEventArgs");
-		IsCounted = true;
+		//IsCounted = true;
 
 		Sender = sender;
 		DropInteraction = dropInteraction;
@@ -49,6 +50,12 @@ public class PlatformDragEventArgs
 	public void SetDropProposal(UIKit.UIDropProposal dropProposal)
 	{
 		DropProposal = dropProposal;
+	}
+
+	
+	public void SetSessionDidEnter(Action<UIKit.UIDropInteraction, UIKit.IUIDropSession>? sessionDidEnter)
+	{
+		SessionDidEnter = sessionDidEnter;
 	}
 
 #elif ANDROID

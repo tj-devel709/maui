@@ -6,14 +6,23 @@ Microsoft.Maui.Controls.PlatformDragStartingEventArgs.Sender.get -> UIKit.UIView
 Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetItemProvider(Foundation.NSItemProvider! itemProvider) -> void
 Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetPreviewProvider(System.Func<UIKit.UIDragPreview?>! previewProvider) -> void
 Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetDragItems(UIKit.UIDragItem![]! dragItems) -> void
+Microsoft.Maui.Controls.PlatformDragEventArgs.SetSessionDidEnter(System.Action<UIKit.UIDropInteraction!, UIKit.IUIDropSession!>? sessionDidEnter) -> void
 Microsoft.Maui.Controls.PlatformDropCompletedEventArgs
+Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetSessionIsRestrictedToDraggingApplication(System.Func<UIKit.UIDragInteraction!, UIKit.IUIDragSession!, bool>? sessionIsRestrictedToDraggingApplication) -> void
+Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetSessionDidMove(System.Action<UIKit.UIDragInteraction!, UIKit.IUIDragSession!>? sessionDidMove) -> void
+Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetItemsForAddingToSession(System.Func<UIKit.UIDragInteraction!, UIKit.IUIDragSession!, CoreGraphics.CGPoint, UIKit.UIDragItem![]!>? itemsForAddingToSession) -> void
+Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetSessionForAddingItems(System.Func<UIKit.UIDragInteraction!, UIKit.IUIDragSession![]!, CoreGraphics.CGPoint, UIKit.IUIDragSession?>? sessionForAddingItems) -> void
+Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetWillAddItems(System.Action<UIKit.UIDragInteraction!, UIKit.IUIDragSession!, UIKit.UIDragItem![]!, UIKit.UIDragInteraction!>? willAddItems) -> void
+Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetSessionAllowsMoveOperation(System.Func<UIKit.UIDragInteraction!, UIKit.IUIDragSession!, bool>? sessionAllowsMoveOperation) -> void
 Microsoft.Maui.Controls.PlatformDropCompletedEventArgs.DragInteraction.get -> UIKit.UIDragInteraction?
+Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetPreviewForLiftingItem(System.Func<UIKit.UIDragInteraction!, UIKit.UIDragItem!, UIKit.IUIDragSession!, UIKit.UITargetedDragPreview?>? previewForLiftingItem) -> void
 Microsoft.Maui.Controls.PlatformDropCompletedEventArgs.DragSession.get -> UIKit.IUIDragSession?
 Microsoft.Maui.Controls.PlatformDropCompletedEventArgs.DropInteraction.get -> UIKit.UIDropInteraction?
 Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetPrefersFullSizePreviews(System.Func<UIKit.UIDragInteraction!, UIKit.IUIDragSession!, bool>? prefersFullSizePreviews) -> void
 Microsoft.Maui.Controls.PlatformDropCompletedEventArgs.DropOperation.get -> UIKit.UIDropOperation?
 Microsoft.Maui.Controls.PlatformDropCompletedEventArgs.DropSession.get -> UIKit.IUIDropSession?
 Microsoft.Maui.Controls.PlatformDropCompletedEventArgs.Sender.get -> UIKit.UIView?
+Microsoft.Maui.Controls.PlatformDragStartingEventArgs.SetSessionWillBegin(System.Action<UIKit.UIDragInteraction!, UIKit.IUIDragSession!>? sessionWillBegin) -> void
 Microsoft.Maui.Controls.PlatformDragEventArgs
 Microsoft.Maui.Controls.PlatformDragEventArgs.DropInteraction.get -> UIKit.UIDropInteraction!
 Microsoft.Maui.Controls.PlatformDragEventArgs.DropSession.get -> UIKit.IUIDropSession!

@@ -27,6 +27,14 @@ public class PlatformDragStartingEventArgs
 	internal Func<UIKit.UIDragPreview?>? PreviewProvider { get; private set; }
 	internal UIKit.UIDragItem[]? DragItems { get; private set; }
 	internal Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? PrefersFullSizePreviews { get; private set; }
+	internal Func<UIKit.UIDragInteraction, UIKit.UIDragItem, UIKit.IUIDragSession, UIKit.UITargetedDragPreview?>? PreviewForLiftingItem { get; private set; }
+	internal Action<UIKit.UIDragInteraction, UIKit.IUIDragSession>? SessionWillBegin { get; private set; }
+	internal Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? SessionAllowsMoveOperation { get; private set; }
+	internal Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? SessionIsRestrictedToDraggingApplication { get; private set; }
+	internal Action<UIKit.UIDragInteraction, UIKit.IUIDragSession>? SessionDidMove { get; private set; }
+	internal Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, CoreGraphics.CGPoint, UIKit.UIDragItem[]>? ItemsForAddingToSession { get; private set; }
+	internal Func<UIKit.UIDragInteraction, UIKit.IUIDragSession[], CoreGraphics.CGPoint, UIKit.IUIDragSession?>? SessionForAddingItems { get; private set; }
+	internal Action<UIKit.UIDragInteraction, UIKit.IUIDragSession, UIKit.UIDragItem[], UIKit.UIDragInteraction>? WillAddItems { get; private set; }
 
 	internal PlatformDragStartingEventArgs(UIKit.UIView? sender, UIKit.UIDragInteraction dragInteraction,
 		UIKit.IUIDragSession dragSession)
@@ -86,6 +94,54 @@ public class PlatformDragStartingEventArgs
 	public void SetPrefersFullSizePreviews(Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? prefersFullSizePreviews)
 	{
 		PrefersFullSizePreviews = prefersFullSizePreviews;
+	}
+
+	// TODO Needs docs
+	public void SetPreviewForLiftingItem(Func<UIKit.UIDragInteraction, UIKit.UIDragItem, UIKit.IUIDragSession, UIKit.UITargetedDragPreview?>? previewForLiftingItem)
+	{
+		PreviewForLiftingItem = previewForLiftingItem;
+	}
+
+	// TODO Needs docs
+	public void SetSessionWillBegin(Action<UIKit.UIDragInteraction, UIKit.IUIDragSession>? sessionWillBegin)
+	{
+		SessionWillBegin = sessionWillBegin;
+	}
+
+	// TODO Needs docs
+	public void SetSessionAllowsMoveOperation(Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? sessionAllowsMoveOperation)
+	{
+		SessionAllowsMoveOperation = sessionAllowsMoveOperation;
+	}
+
+	// TODO Needs docs
+	public void SetSessionIsRestrictedToDraggingApplication(Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? sessionIsRestrictedToDraggingApplication)
+	{
+		SessionIsRestrictedToDraggingApplication = sessionIsRestrictedToDraggingApplication;
+	}
+
+	// TODO Needs docs
+	public void SetSessionDidMove(Action<UIKit.UIDragInteraction, UIKit.IUIDragSession>? sessionDidMove)
+	{
+		SessionDidMove = sessionDidMove;
+	}
+
+	// TODO Needs docs
+	public void SetItemsForAddingToSession(Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, CoreGraphics.CGPoint, UIKit.UIDragItem[]>? itemsForAddingToSession)
+	{
+		ItemsForAddingToSession = itemsForAddingToSession;
+	}
+
+	// TODO Needs docs
+	public void SetSessionForAddingItems(Func<UIKit.UIDragInteraction, UIKit.IUIDragSession[], CoreGraphics.CGPoint, UIKit.IUIDragSession?>? sessionForAddingItems)
+	{
+		SessionForAddingItems = sessionForAddingItems;
+	}
+
+	// TODO Needs docs
+	public void SetWillAddItems(Action<UIKit.UIDragInteraction, UIKit.IUIDragSession, UIKit.UIDragItem[], UIKit.UIDragInteraction>? willAddItems)
+	{
+		WillAddItems = willAddItems;
 	}
 
 #elif ANDROID
