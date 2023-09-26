@@ -1,4 +1,3 @@
-#nullable disable
 #if __MOBILE__
 using System;
 using System.Runtime.Versioning;
@@ -13,15 +12,15 @@ namespace Microsoft.Maui.Controls.Platform
 	[SupportedOSPlatform("ios11.0")]
 	class DragAndDropDelegate : NSObject, IUIDragInteractionDelegate, IUIDropInteractionDelegate
 	{
-		IPlatformViewHandler _viewHandler;
-		PlatformDragStartingEventArgs _platformDragStartingEventArgs;
+		IPlatformViewHandler? _viewHandler;
+		PlatformDragStartingEventArgs? _platformDragStartingEventArgs;
 
 		public DragAndDropDelegate(IPlatformViewHandler viewHandler)
 		{
 			_viewHandler = viewHandler;
 		}
 
-		public void Disconnect ()
+		public void Disconnect()
 		{
 			_viewHandler = null;
 		}
@@ -54,14 +53,14 @@ namespace Microsoft.Maui.Controls.Platform
 				session.Items.Length > 0 &&
 				session.Items[0].LocalObject is CustomLocalStateData cdi)
 			{
-				this.HandleDropCompleted(cdi.View, new PlatformDropCompletedEventArgs(cdi.View.Handler.PlatformView as UIView, interaction, session, operation));
+				this.HandleDropCompleted(cdi.View, new PlatformDropCompletedEventArgs(cdi?.View?.Handler?.PlatformView as UIView, interaction, session, operation));
 			}
 		}
 
 		[Preserve(Conditional = true)]
 		public UIDragItem[] GetItemsForBeginningSession(UIDragInteraction interaction, IUIDragSession session)
 		{
-			return HandleDragStarting((View)_viewHandler.VirtualView, _viewHandler, session, new PlatformDragStartingEventArgs(_viewHandler.PlatformView, interaction, session));
+			return HandleDragStarting(_viewHandler?.VirtualView as View, _viewHandler, session, new PlatformDragStartingEventArgs(_viewHandler?.PlatformView, interaction, session));
 		}
 
 		[Export("dropInteraction:canHandleSession:")]
@@ -72,7 +71,7 @@ namespace Microsoft.Maui.Controls.Platform
 		[Preserve(Conditional = true)]
 		public void SessionDidExit(UIDropInteraction interaction, IUIDropSession session)
 		{
-			DataPackage package = null;
+			DataPackage? package = null;
 
 			if (session.LocalDragSession?.Items.Length > 0 &&
 				session.LocalDragSession.Items[0].LocalObject is CustomLocalStateData cdi)
@@ -81,7 +80,7 @@ namespace Microsoft.Maui.Controls.Platform
 			}
 
 
-			HandleDragLeave((View)_viewHandler.VirtualView, package, session.LocalDragSession, new PlatformDragEventArgs(_viewHandler.PlatformView, interaction, session));
+			HandleDragLeave(_viewHandler?.VirtualView as View, package, session.LocalDragSession, new PlatformDragEventArgs(_viewHandler?.PlatformView, interaction, session));
 		}
 
 		[Export("dropInteraction:sessionDidUpdate:")]
@@ -93,7 +92,7 @@ namespace Microsoft.Maui.Controls.Platform
 			if (session.LocalDragSession == null)
 				return new UIDropProposal(operation);
 
-			DataPackage package = null;
+			DataPackage? package = null;
 
 			if (session.LocalDragSession.Items.Length > 0 &&
 				session.LocalDragSession.Items[0].LocalObject is CustomLocalStateData cdi)
@@ -101,9 +100,9 @@ namespace Microsoft.Maui.Controls.Platform
 				package = cdi.DataPackage;
 			}
 
-			var platformArgs = new PlatformDragEventArgs(_viewHandler.PlatformView, interaction, session);
+			var platformArgs = new PlatformDragEventArgs(_viewHandler?.PlatformView, interaction, session);
 
-			if (HandleDragOver((View)_viewHandler.VirtualView, package, session.LocalDragSession, platformArgs))
+			if (HandleDragOver(_viewHandler?.VirtualView as View, package, session.LocalDragSession, platformArgs))
 			{
 				if (platformArgs.DropProposal is not null)
 					return platformArgs.DropProposal;
@@ -120,24 +119,226 @@ namespace Microsoft.Maui.Controls.Platform
 		{
 			if (session.LocalDragSession?.Items.Length > 0 &&
 				session.LocalDragSession.Items[0].LocalObject is CustomLocalStateData cdi &&
-				_viewHandler.VirtualView is View view)
+				_viewHandler?.VirtualView is View view)
 			{
-				HandleDrop(view, cdi.DataPackage, session, new PlatformDropEventArgs(cdi.View.Handler.PlatformView as UIView, interaction, session));
-				HandleDropCompleted(cdi.View, new PlatformDropCompletedEventArgs(cdi.View.Handler.PlatformView as UIView, interaction, session));
+				HandleDrop(view, cdi.DataPackage, session, new PlatformDropEventArgs(cdi.View?.Handler?.PlatformView as UIView, interaction, session));
+				HandleDropCompleted(cdi.View, new PlatformDropCompletedEventArgs(cdi.View?.Handler?.PlatformView as UIView, interaction, session));
 			}
-			else if (_viewHandler.VirtualView is View v)
+			else if (_viewHandler?.VirtualView is View v)
 			{
 				// if the developer added their own LocalObject, pass in null and still allow the HandleDrop to fire
 				HandleDrop(v, null, session, new PlatformDropEventArgs(null, interaction, session));
 			}
 		}
 
+		// PlatformDragStarting
+		[Export("dropInteraction:sessionDidEnter:")]
+		[Preserve(Conditional = true)]
+		public void SessionDidEnter(UIDropInteraction interaction, IUIDropSession session)
+		{
+			Console.WriteLine("Delegate SessionDidEnter");
+			//_platformDragStartingEventArgs?.SessionDidEnter?.Invoke(interaction, session);
+		}
 
-		void SendEventArgs<TRecognizer>(Action<TRecognizer> func, View view)
-			where TRecognizer : class
+		// PlatformDropEvent
+		[Export("dropInteraction:concludeDrop:")]
+		[Preserve(Conditional = true)]
+		public void ConcludeDrop(UIDropInteraction interaction, IUIDropSession session)
+		{
+			Console.WriteLine("Delegate ConcludeDrop");
+			//_platformDragStartingEventArgs?.ConcludeDrop?.Invoke(interaction, session);
+		}
+
+		// PlatformDropEvent
+		[Export("dropInteraction:previewForDroppingItem:withDefault:")]
+		[Preserve(Conditional = true)]
+		public UITargetedDragPreview? GetPreviewForDroppingItem(UIDropInteraction interaction, UIDragItem item, UITargetedDragPreview defaultPreview)
+		{
+			Console.WriteLine("Delegate GetPreviewForDroppingItem");
+			return null;
+			//return _platformDragStartingEventArgs?.GetPreviewForDroppingItem?.Invoke(interaction, item, defaultPreview) ?? null;
+		}
+
+		// PlatformDropEvent
+		[Export("dropInteraction:item:willAnimateDropWithAnimator:")]
+		[Preserve(Conditional = true)]
+		public void WillAnimateDrop(UIDropInteraction interaction, UIDragItem item, IUIDragAnimating animator)
+		{
+			Console.WriteLine("Delegate WillAnimateDrop");
+			//_platformDragStartingEventArgs?.WillAnimateDrop?.Invoke(interaction, item, animator);
+		}
+
+		// If we have this method, it will use the preview provided here,
+		// and if not, it will use the drag interactions preview.
+		// TODO how can we use the items.PreviewProvider (UIDragItem) as the default when
+		// the type here is UITargetedDragPreview
+
+		// PlatformDragStarting
+		[Export("dragInteraction:previewForLiftingItem:session:")]
+		[Preserve(Conditional = true)]
+		public UITargetedDragPreview? GetPreviewForLiftingItem(UIDragInteraction interaction, UIDragItem item, IUIDragSession session)
+		{
+			Console.WriteLine("Delegate GetPreviewForLiftingItem");
+
+			//if (item.PreviewProvider?.Invoke()?.View is UIView view)
+			//{
+			//	var parameters = new UIDragPreviewParameters();
+			//	try
+			//	{
+					//var container = new UIView(view.Bounds);
+
+			//		container.AddSubview(view);
+			//		return new UITargetedDragPreview(container);
+			//	}
+			//	catch(Exception e)
+			//	{
+			//		Console.Write(e.ToString());
+			//		return null;
+			//	}
+			//}
+			//else
+			//{
+			//	var parameters = new UIDragPreviewParameters();
+
+			//	return new UITargetedDragPreview(interaction.View, parameters);
+			//}
+
+			//var parameters = new UIDragPreviewParameters() { BackgroundColor = UIColor.Green};
+
+			return new UITargetedDragPreview(interaction.View);
+
+			//return null;
+			//CGRect frame = new CGRect(0, 0, 100, 100);
+			//return new UITargetedDragPreview(new UIView(frame)
+			//{
+			//	BackgroundColor = UIColor.Green
+			//}, parameters);
+
+
+
+			//return _platformDragStartingEventArgs?.GetPreviewForLiftingItem?.Invoke(interaction, item, session) ?? null;
+		}
+
+		// PlatformDragStarting
+		[Export("dragInteraction:willAnimateLiftWithAnimator:session:")]
+		[Preserve(Conditional = true)]
+		public void WillAnimateLift(UIDragInteraction interaction, IUIDragAnimating animator, IUIDragSession session)
+		{
+			Console.WriteLine("Delegate WillAnimateLift");
+			//_platformDragStartingEventArgs?.WillAnimateLift?.Invoke(interaction, animator, session);
+		}
+
+		// PlatformDragStarting
+		[Export("dragInteraction:sessionWillBegin:")]
+		[Preserve(Conditional = true)]
+		public void SessionWillBegin(UIDragInteraction interaction, IUIDragSession session)
+		{
+			Console.WriteLine("Delegate SessionWillBegin");
+			//_platformDragStartingEventArgs?.SessionWillBegin?.Invoke(interaction, session);
+		}
+
+		// PlatformDragStarting
+		[Export("dragInteraction:sessionAllowsMoveOperation:")]
+		[Preserve(Conditional = true)]
+		public bool SessionAllowsMoveOperation(UIDragInteraction interaction, IUIDragSession session)
+		{
+			Console.WriteLine("Delegate SessionAllowsMoveOperation");
+			return true;
+			//return _platformDragStartingEventArgs?.SessionAllowsMoveOperation?.Invoke(interaction, session) ?? true;
+		}
+
+		// PlatformDragStarting
+		[Export("dragInteraction:sessionIsRestrictedToDraggingApplication:")]
+		[Preserve(Conditional = true)]
+		public bool SessionIsRestrictedToDraggingApplication(UIDragInteraction interaction, IUIDragSession session)
+		{
+			Console.WriteLine("Delegate SessionIsRestrictedToDraggingApplication");
+			return false;
+			//return _platformDragStartingEventArgs?.SessionIsRestrictedToDraggingApplication?.Invoke(interaction, session) ?? false;
+		}
+
+		bool IsCounted = false;
+
+		//PlatformDragStarting
+		[Export("dragInteraction:sessionDidMove:")]
+		[Preserve(Conditional = true)]
+		public void SessionDidMove(UIDragInteraction interaction, IUIDragSession session)
+		{
+			if (!IsCounted)
+				Console.WriteLine("Delegate SessionDidMove");
+			IsCounted = true;
+			//Console.WriteLine("Delegate SessionDidMove");
+			//_platformDragStartingEventArgs?.SessionDidMove?.Invoke(interaction, session);
+		}
+
+		// PlatformDragEvent
+		[Export("dragInteraction:sessionDidTransferItems:")]
+		[Preserve(Conditional = true)]
+		public void SessionDidTransferItems(UIDragInteraction interaction, IUIDragSession session)
+		{
+			Console.WriteLine("Delegate SessionDidTransferItems");
+			//_platformDragStartingEventArgs?.SessionDidTransferItems?.Invoke(interaction, session);
+		}
+
+
+		// PlatformDragStartingEventArgs
+		[Export("dragInteraction:itemsForAddingToSession:withTouchAtPoint:")]
+		[Preserve(Conditional = true)]
+		public UIDragItem[] GetItemsForAddingToSession(UIDragInteraction interaction, IUIDragSession session, CGPoint point)
+		{
+			Console.WriteLine("Delegate GetItemsForAddingToSession");
+
+			//return new UIDragItem[]{
+			//	new UIDragItem(new NSItemProvider(interaction.View, "view"))
+			//};
+
+			return Array.Empty<UIDragItem>();
+			//return _platformDragStartingEventArgs?.GetItemsForAddingToSession?.Invoke(interaction, session, point) ?? Array.Empty<UIDragItem>();
+		}
+
+		// PlatformDragStartingEvent
+		[Export("dragInteraction:sessionForAddingItems:withTouchAtPoint:")]
+		[Preserve(Conditional = true)]
+		public IUIDragSession? GetSessionForAddingItems(UIDragInteraction interaction, IUIDragSession[] sessions, CGPoint point)
+		{
+			Console.WriteLine("Delegate GetSessionForAddingItems");
+			return null;
+			//return _platformDragStartingEventArgs?.GetSessionForAddingItems?.Invoke(interaction, sessions, point) ?? null;
+		}
+
+		// PlatformDragStartEvent
+		[Export("dragInteraction:session:willAddItems:forInteraction:")]
+		[Preserve(Conditional = true)]
+		public void WillAddItems(UIDragInteraction interaction, IUIDragSession session, UIDragItem[] items, UIDragInteraction addingInteraction)
+		{
+			Console.WriteLine("Delegate WillAddItems");
+			//_platformDragStartingEventArgs?.WillAddItems?.Invoke(interaction, session, items, addingInteraction);
+		}
+
+		// PlatformDropCompleted
+		[Export("dragInteraction:previewForCancellingItem:withDefault:")]
+		[Preserve(Conditional = true)]
+		public UITargetedDragPreview? GetPreviewForCancellingItem(UIDragInteraction interaction, UIDragItem item, UITargetedDragPreview defaultPreview)
+		{
+			Console.WriteLine("Delegate GetPreviewForCancellingItem");
+			return null;
+			//return _platformDragStartingEventArgs?.GetPreviewForCancellingItem?.Invoke(interaction, item, defaultPreview) ?? null;
+		}
+
+		// PlatformDropCompleted
+		[Export("dragInteraction:item:willAnimateCancelWithAnimator:")]
+		[Preserve(Conditional = true)]
+		public void WillAnimateCancel(UIDragInteraction interaction, UIDragItem item, IUIDragAnimating animator)
+		{
+			Console.WriteLine("Delegate WillAnimateCancel");
+			//_platformDragStartingEventArgs?.WillAnimateCancel?.Invoke(interaction, item, animator);
+		}
+
+		void SendEventArgs<TRecognizer>(Action<TRecognizer> func, View? view)
+				where TRecognizer : class
 		{
 			var gestures =
-				view.GestureRecognizers;
+				view?.GestureRecognizers;
 
 			if (gestures == null)
 				return;
@@ -150,9 +351,9 @@ namespace Microsoft.Maui.Controls.Platform
 		}
 
 
-		public UIDragItem[] HandleDragStarting(View element, IPlatformViewHandler handler, IUIDragSession session, PlatformDragStartingEventArgs platformArgs)
+		public UIDragItem[] HandleDragStarting(View? element, IPlatformViewHandler? handler, IUIDragSession session, PlatformDragStartingEventArgs platformArgs)
 		{
-			UIDragItem[] returnValue = null;
+			UIDragItem[]? returnValue = null;
 			// if we touch and hold an item but do not move it, the _platformDragStartingEventArgs could be assigned. Reset it here in that case.
 			_platformDragStartingEventArgs = null;
 			SendEventArgs<DragGestureRecognizer>(rec =>
@@ -174,7 +375,7 @@ namespace Microsoft.Maui.Controls.Platform
 				{
 					_platformDragStartingEventArgs = args.PlatformArgs;
 
-					if (args.PlatformArgs.DragItems is UIDragItem[] dragItems)
+					if (args.PlatformArgs?.DragItems is UIDragItem[] dragItems)
 					{
 						foreach (var item in dragItems)
 						{
@@ -185,14 +386,14 @@ namespace Microsoft.Maui.Controls.Platform
 						return;
 					}
 
-					UIImage uIImage = null;
+					UIImage? uIImage = null;
 					string clipDescription = String.Empty;
-					NSItemProvider itemProvider = null;
+					NSItemProvider? itemProvider = null;
 
-					if (handler.PlatformView is UIImageView iv)
+					if (handler?.PlatformView is UIImageView iv)
 						uIImage = iv.Image;
 
-					if (handler.PlatformView is UIButton b && b.ImageView != null)
+					if (handler?.PlatformView is UIButton b && b.ImageView != null)
 						uIImage = b.ImageView.Image;
 
 					if (uIImage != null)
@@ -202,16 +403,16 @@ namespace Microsoft.Maui.Controls.Platform
 						else
 							itemProvider = new NSItemProvider(new NSString(""));
 
-						if (args.Data.Image == null && handler.VirtualView is IImageElement imageElement)
+						if (args.Data.Image == null && handler?.VirtualView is IImageElement imageElement)
 							args.Data.Image = imageElement.Source;
 					}
 					else
 					{
 						string text = args.Data.Text ?? clipDescription;
 
-						if (String.IsNullOrWhiteSpace(text))
+						if (String.IsNullOrWhiteSpace(text) && handler?.PlatformView?.ConvertToImage() is UIImage image)
 						{
-							itemProvider = new NSItemProvider(handler.PlatformView.ConvertToImage());
+							itemProvider = new NSItemProvider(image);
 						}
 						else
 						{
@@ -219,12 +420,12 @@ namespace Microsoft.Maui.Controls.Platform
 						}
 					}
 
-					var dragItem = new UIDragItem(args.PlatformArgs.ItemProvider ?? itemProvider);
+					var dragItem = new UIDragItem(args.PlatformArgs?.ItemProvider ?? itemProvider);
 
 					SetLocalObject(dragItem, handler, args.Data);
 
-					if (args.PlatformArgs.PreviewProvider is not null)
-						dragItem.PreviewProvider = args.PlatformArgs.PreviewProvider;
+					if (args.PlatformArgs?.PreviewProvider is not null)
+						dragItem.PreviewProvider = args.PlatformArgs.PreviewProvider!;
 
 					returnValue = new UIDragItem[] { dragItem };
 				}
@@ -234,23 +435,23 @@ namespace Microsoft.Maui.Controls.Platform
 			return returnValue ?? new UIDragItem[0];
 		}
 
-		void SetLocalObject(UIDragItem dragItem, IPlatformViewHandler handler, DataPackage data)
+		void SetLocalObject(UIDragItem dragItem, IPlatformViewHandler? handler, DataPackage data)
 		{
 			dragItem.LocalObject = new CustomLocalStateData()
 			{
 				Handler = handler,
-				View = handler.VirtualView as View,
+				View = handler?.VirtualView as View,
 				DataPackage = data
 			};
 		}
 
-		void HandleDropCompleted(View element, PlatformDropCompletedEventArgs platformArgs)
+		void HandleDropCompleted(View? element, PlatformDropCompletedEventArgs platformArgs)
 		{
 			var args = new DropCompletedEventArgs(platformArgs);
 			SendEventArgs<DragGestureRecognizer>(rec => rec.SendDropCompleted(args), element);
 		}
 
-		bool HandleDragLeave(View element, DataPackage dataPackage, IUIDragSession session, PlatformDragEventArgs platformArgs)
+		bool HandleDragLeave(View? element, DataPackage? dataPackage, IUIDragSession? session, PlatformDragEventArgs platformArgs)
 		{
 			var viewHandlerRef = new WeakReference(_viewHandler);
 			var sessionRef = session is null ? null : new WeakReference(session);
@@ -270,7 +471,7 @@ namespace Microsoft.Maui.Controls.Platform
 			return validTarget;
 		}
 
-		bool HandleDragOver(View element, DataPackage dataPackage, IUIDragSession session, PlatformDragEventArgs platformArgs)
+		bool HandleDragOver(View? element, DataPackage? dataPackage, IUIDragSession session, PlatformDragEventArgs platformArgs)
 		{
 			var viewHandlerRef = new WeakReference(_viewHandler);
 			var sessionRef = new WeakReference(session);
@@ -290,7 +491,7 @@ namespace Microsoft.Maui.Controls.Platform
 			return validTarget;
 		}
 
-		void HandleDrop(View element, DataPackage datapackage, IUIDropSession session, PlatformDropEventArgs platformArgs)
+		void HandleDrop(View element, DataPackage? datapackage, IUIDropSession session, PlatformDropEventArgs platformArgs)
 		{
 			var viewHandlerRef = new WeakReference(_viewHandler);
 			var sessionRef = session is null ? null : new WeakReference(session);
@@ -312,7 +513,7 @@ namespace Microsoft.Maui.Controls.Platform
 			}, (View)element);
 		}
 
-		static internal Point? CalculatePosition(IElement relativeTo, WeakReference viewHandlerRef, WeakReference sessionRef)
+		static internal Point? CalculatePosition(IElement? relativeTo, WeakReference viewHandlerRef, WeakReference? sessionRef)
 		{
 			if (sessionRef is null)
 				return null;
@@ -326,7 +527,7 @@ namespace Microsoft.Maui.Controls.Platform
 
 			CGPoint dragLocation;
 
-			if (virtualView is null)
+			if (virtualView is null || session is null)
 				return null;
 
 			// If relativeTo is null we get the location on the screen
@@ -361,10 +562,23 @@ namespace Microsoft.Maui.Controls.Platform
 
 		class CustomLocalStateData : NSObject
 		{
-			public View View { get; set; }
-			public IViewHandler Handler { get; set; }
-			public DataPackage DataPackage { get; set; }
+			public View? View { get; set; }
+			public IViewHandler? Handler { get; set; }
+			public DataPackage? DataPackage { get; set; }
 		}
+
+		//internal interface IPreviewForLiftingItemProvider : IUIDragInteractionDelegate
+		//{
+		//	[Export("dragInteraction:previewForLiftingItem:session:")]
+		//	[Preserve(Conditional = true)]
+		//	public UITargetedDragPreview? GetPreviewForLiftingItem(UIDragInteraction interaction, UIDragItem item, IUIDragSession session)
+		//	{
+		//		Console.WriteLine("Delegate GetPreviewForLiftingItem");
+		//		var previewProvider = item.PreviewProvider?.Invoke();
+		//		return null;
+		//		//return _platformDragStartingEventArgs?.GetPreviewForLiftingItem?.Invoke(interaction, item, session) ?? null;
+		//	}
+		//}
 	}
 }
 #endif

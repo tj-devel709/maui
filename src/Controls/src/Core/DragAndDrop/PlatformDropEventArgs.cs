@@ -26,6 +26,7 @@ public class PlatformDropEventArgs
 	internal PlatformDropEventArgs(UIKit.UIView? sender, UIKit.UIDropInteraction dropInteraction,
 		UIKit.IUIDropSession dropSession)
 	{
+		Console.WriteLine("CREATING PlatformDropEventArgs");
 		Sender = sender;
 		DropInteraction = dropInteraction;
 		DropSession = dropSession;

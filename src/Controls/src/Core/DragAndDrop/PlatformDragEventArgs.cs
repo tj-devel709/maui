@@ -24,9 +24,15 @@ public class PlatformDragEventArgs
 
 	internal UIKit.UIDropProposal? DropProposal { get; private set; }
 
+	static bool IsCounted = false;
+
 	internal PlatformDragEventArgs(UIKit.UIView? sender, UIKit.UIDropInteraction dropInteraction,
 		UIKit.IUIDropSession dropSession)
 	{
+		if (!IsCounted)
+			Console.WriteLine("CREATING PlatformDragEventArgs");
+		IsCounted = true;
+
 		Sender = sender;
 		DropInteraction = dropInteraction;
 		DropSession = dropSession;

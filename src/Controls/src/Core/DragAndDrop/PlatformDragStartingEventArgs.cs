@@ -31,6 +31,7 @@ public class PlatformDragStartingEventArgs
 	internal PlatformDragStartingEventArgs(UIKit.UIView? sender, UIKit.UIDragInteraction dragInteraction,
 		UIKit.IUIDragSession dragSession)
 	{
+		Console.WriteLine("CREATING PlatformDragStargingEventArgs");
 		Sender = sender;
 		DragInteraction = dragInteraction;
 		DragSession = dragSession;

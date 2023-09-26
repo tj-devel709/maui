@@ -108,7 +108,7 @@ namespace Microsoft.Maui.Controls
 			DropCompleted?.Invoke(this, args);
 		}
 
-		internal DragStartingEventArgs SendDragStarting(View element, Func<IElement?, Point?>? getPosition = null, PlatformDragStartingEventArgs? platformArgs = null)
+		internal DragStartingEventArgs SendDragStarting(View? element, Func<IElement?, Point?>? getPosition = null, PlatformDragStartingEventArgs? platformArgs = null)
 		{
 			var args = new DragStartingEventArgs(getPosition, platformArgs);
 

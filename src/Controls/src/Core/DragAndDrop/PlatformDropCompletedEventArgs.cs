@@ -55,6 +55,7 @@ public class PlatformDropCompletedEventArgs
 	internal PlatformDropCompletedEventArgs(UIKit.UIView? sender, UIKit.UIDragInteraction dragInteraction,
 		UIKit.IUIDragSession dragSession, UIKit.UIDropOperation dropOperation)
 	{
+		Console.WriteLine("CREATING PlatformDropCompletedEventArgs");
 		Sender = sender;
 		DragInteraction = dragInteraction;
 		DragSession = dragSession;
