@@ -1,4 +1,6 @@
 ﻿using System;
+using Microsoft.VisualBasic;
+
 namespace Microsoft.Maui.Controls;
 
 /// <summary>
@@ -24,6 +26,7 @@ public class PlatformDragEventArgs
 
 	internal UIKit.UIDropProposal? DropProposal { get; private set; }
 	internal Action<UIKit.UIDropInteraction, UIKit.IUIDropSession>? SessionDidEnter { get; private set; }
+	internal Action<UIKit.UIDragInteraction, UIKit.IUIDragSession>? SessionDidTransferItems { get; private set; }
 
 	//static bool IsCounted = false;
 
@@ -52,10 +55,16 @@ public class PlatformDragEventArgs
 		DropProposal = dropProposal;
 	}
 
-	
+	// TODO Needs docs
 	public void SetSessionDidEnter(Action<UIKit.UIDropInteraction, UIKit.IUIDropSession>? sessionDidEnter)
 	{
 		SessionDidEnter = sessionDidEnter;
+	}
+
+	// TODO Needs docs
+	public void SetSessionDidTransferItems(Action<UIKit.UIDragInteraction, UIKit.IUIDragSession>? sessionDidTransferItems)
+	{
+		SessionDidTransferItems = sessionDidTransferItems;
 	}
 
 #elif ANDROID

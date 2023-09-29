@@ -52,6 +52,9 @@ public class PlatformDropCompletedEventArgs
 	/// </remarks>
 	public UIKit.IUIDropSession? DropSession { get; }
 
+	internal Func<UIKit.UIDragInteraction, UIKit.UIDragItem, UIKit.UITargetedDragPreview, UIKit.UITargetedDragPreview?>? PreviewForCancellingItem { get; private set; }
+	internal Action<UIKit.UIDragInteraction, UIKit.UIDragItem, UIKit.IUIDragAnimating>? WillAnimateCancel { get; private set; }
+
 	internal PlatformDropCompletedEventArgs(UIKit.UIView? sender, UIKit.UIDragInteraction dragInteraction,
 		UIKit.IUIDragSession dragSession, UIKit.UIDropOperation dropOperation)
 	{
@@ -68,6 +71,18 @@ public class PlatformDropCompletedEventArgs
 		Sender = sender;
 		DropInteraction = dropInteraction;
 		DropSession = dropSession;
+	}
+
+	// TODO Needs docs
+	public void SetPreviewForCancellingItem(Func<UIKit.UIDragInteraction, UIKit.UIDragItem, UIKit.UITargetedDragPreview, UIKit.UITargetedDragPreview?>? previewForCancellingItem)
+	{
+		PreviewForCancellingItem = previewForCancellingItem;
+	}
+
+	// TODO Needs docs
+	public void SetWillAnimateCancel(Action<UIKit.UIDragInteraction, UIKit.UIDragItem, UIKit.IUIDragAnimating>? willAnimateCancel)
+	{
+		WillAnimateCancel = willAnimateCancel;
 	}
 
 #elif ANDROID

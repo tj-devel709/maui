@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.VisualBasic;
 
 namespace Microsoft.Maui.Controls;
 
@@ -29,6 +30,7 @@ public class PlatformDragStartingEventArgs
 	internal Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? PrefersFullSizePreviews { get; private set; }
 	internal Func<UIKit.UIDragInteraction, UIKit.UIDragItem, UIKit.IUIDragSession, UIKit.UITargetedDragPreview?>? PreviewForLiftingItem { get; private set; }
 	internal Action<UIKit.UIDragInteraction, UIKit.IUIDragSession>? SessionWillBegin { get; private set; }
+	internal Action<UIKit.UIDragInteraction, UIKit.IUIDragAnimating, UIKit.IUIDragSession>? WillAnimateLift { get; private set; }
 	internal Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? SessionAllowsMoveOperation { get; private set; }
 	internal Func<UIKit.UIDragInteraction, UIKit.IUIDragSession, bool>? SessionIsRestrictedToDraggingApplication { get; private set; }
 	internal Action<UIKit.UIDragInteraction, UIKit.IUIDragSession>? SessionDidMove { get; private set; }
@@ -100,6 +102,12 @@ public class PlatformDragStartingEventArgs
 	public void SetPreviewForLiftingItem(Func<UIKit.UIDragInteraction, UIKit.UIDragItem, UIKit.IUIDragSession, UIKit.UITargetedDragPreview?>? previewForLiftingItem)
 	{
 		PreviewForLiftingItem = previewForLiftingItem;
+	}
+
+	// TODO Needs docs
+	public void SetWillAnimateLift(Action<UIKit.UIDragInteraction, UIKit.IUIDragAnimating, UIKit.IUIDragSession>? willAnimateLift)
+	{
+		WillAnimateLift = willAnimateLift;
 	}
 
 	// TODO Needs docs

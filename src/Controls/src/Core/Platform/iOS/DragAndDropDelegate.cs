@@ -15,7 +15,7 @@ namespace Microsoft.Maui.Controls.Platform
 		IPlatformViewHandler? _viewHandler;
 		PlatformDragStartingEventArgs? _platformDragStartingEventArgs;
 		PlatformDragEventArgs? _platformDragEventArgs;
-		//PlatformDropEventArgs? _platformDropEventArgs;
+		PlatformDropEventArgs? _platformDropEventArgs;
 		PlatformDropCompletedEventArgs? _platformDropCompletedEventArgs;
 
 		public DragAndDropDelegate(IPlatformViewHandler viewHandler)
@@ -39,12 +39,14 @@ namespace Microsoft.Maui.Controls.Platform
 		[Preserve(Conditional = true)]
 		public void SessionDidEnd(UIDropInteraction interaction, IUIDropSession session)
 		{
+			Console.WriteLine($"Delegate SessionDidEnd");
 			_platformDragStartingEventArgs = null;
 		}
 
 		[Export("dragInteraction:session:didEndWithOperation:")]
 		public void SessionDidEnd(UIDragInteraction interaction, IUIDragSession session, UIDropOperation operation)
 		{
+			Console.WriteLine($"Delegate SessionDidEnd");
 			_platformDragStartingEventArgs = null;
 		}
 
@@ -125,14 +127,16 @@ namespace Microsoft.Maui.Controls.Platform
 				session.LocalDragSession.Items[0].LocalObject is CustomLocalStateData cdi &&
 				_viewHandler?.VirtualView is View view)
 			{
-				HandleDrop(view, cdi.DataPackage, session, new PlatformDropEventArgs(cdi.View?.Handler?.PlatformView as UIView, interaction, session));
+				_platformDropEventArgs = new PlatformDropEventArgs(cdi.View?.Handler?.PlatformView as UIView, interaction, session);
+				HandleDrop(view, cdi.DataPackage, session, _platformDropEventArgs);
 				_platformDropCompletedEventArgs = new PlatformDropCompletedEventArgs(cdi.View?.Handler?.PlatformView as UIView, interaction, session);
 				HandleDropCompleted(cdi.View, _platformDropCompletedEventArgs);
 			}
 			else if (_viewHandler?.VirtualView is View v)
 			{
+				_platformDropEventArgs = new PlatformDropEventArgs(null, interaction, session);
 				// if the developer added their own LocalObject, pass in null and still allow the HandleDrop to fire
-				HandleDrop(v, null, session, new PlatformDropEventArgs(null, interaction, session));
+				HandleDrop(v, null, session, _platformDropEventArgs);
 			}
 		}
 
@@ -157,32 +161,28 @@ namespace Microsoft.Maui.Controls.Platform
 			_platformDragEventArgs.SessionDidEnter?.Invoke(interaction, session);
 		}
 
-		// PlatformDropEvent
 		[Export("dropInteraction:concludeDrop:")]
 		[Preserve(Conditional = true)]
 		public void ConcludeDrop(UIDropInteraction interaction, IUIDropSession session)
 		{
 			Console.WriteLine("Delegate ConcludeDrop");
-			//_platformDragStartingEventArgs?.ConcludeDrop?.Invoke(interaction, session);
+			_platformDropEventArgs?.ConcludeDrop?.Invoke(interaction, session);
 		}
 
-		// PlatformDropEvent
 		[Export("dropInteraction:previewForDroppingItem:withDefault:")]
 		[Preserve(Conditional = true)]
 		public UITargetedDragPreview? GetPreviewForDroppingItem(UIDropInteraction interaction, UIDragItem item, UITargetedDragPreview defaultPreview)
 		{
 			Console.WriteLine("Delegate GetPreviewForDroppingItem");
-			return null;
-			//return _platformDragStartingEventArgs?.GetPreviewForDroppingItem?.Invoke(interaction, item, defaultPreview) ?? null;
+			return _platformDropEventArgs?.PreviewForDroppingItem?.Invoke(interaction, item, defaultPreview) ?? null;
 		}
 
-		// PlatformDropEvent
 		[Export("dropInteraction:item:willAnimateDropWithAnimator:")]
 		[Preserve(Conditional = true)]
 		public void WillAnimateDrop(UIDropInteraction interaction, UIDragItem item, IUIDragAnimating animator)
 		{
 			Console.WriteLine("Delegate WillAnimateDrop");
-			//_platformDragStartingEventArgs?.WillAnimateDrop?.Invoke(interaction, item, animator);
+			_platformDropEventArgs?.WillAnimateDrop?.Invoke(interaction, item, animator);
 		}
 
 		[Export("dragInteraction:previewForLiftingItem:session:")]
@@ -204,7 +204,7 @@ namespace Microsoft.Maui.Controls.Platform
 		public void WillAnimateLift(UIDragInteraction interaction, IUIDragAnimating animator, IUIDragSession session)
 		{
 			Console.WriteLine("Delegate WillAnimateLift");
-			//_platformDragStartingEventArgs?.WillAnimateLift?.Invoke(interaction, animator, session);
+			_platformDragStartingEventArgs?.WillAnimateLift?.Invoke(interaction, animator, session);
 		}
 
 		[Export("dragInteraction:sessionWillBegin:")]
@@ -245,13 +245,12 @@ namespace Microsoft.Maui.Controls.Platform
 			_platformDragStartingEventArgs?.SessionDidMove?.Invoke(interaction, session);
 		}
 
-		// PlatformDragEvent
 		[Export("dragInteraction:sessionDidTransferItems:")]
 		[Preserve(Conditional = true)]
 		public void SessionDidTransferItems(UIDragInteraction interaction, IUIDragSession session)
 		{
 			Console.WriteLine("Delegate SessionDidTransferItems");
-			//_platformDragStartingEventArgs?.SessionDidTransferItems?.Invoke(interaction, session);
+			_platformDragEventArgs?.SessionDidTransferItems?.Invoke(interaction, session);
 		}
 
 		[Export("dragInteraction:itemsForAddingToSession:withTouchAtPoint:")]
@@ -278,23 +277,20 @@ namespace Microsoft.Maui.Controls.Platform
 			_platformDragStartingEventArgs?.WillAddItems?.Invoke(interaction, session, items, addingInteraction);
 		}
 
-		// PlatformDropCompleted
 		[Export("dragInteraction:previewForCancellingItem:withDefault:")]
 		[Preserve(Conditional = true)]
 		public UITargetedDragPreview? GetPreviewForCancellingItem(UIDragInteraction interaction, UIDragItem item, UITargetedDragPreview defaultPreview)
 		{
 			Console.WriteLine("Delegate GetPreviewForCancellingItem");
-			return null;
-			//return _platformDragStartingEventArgs?.GetPreviewForCancellingItem?.Invoke(interaction, item, defaultPreview) ?? null;
+			return _platformDropCompletedEventArgs?.PreviewForCancellingItem?.Invoke(interaction, item, defaultPreview) ?? null;
 		}
 
-		// PlatformDropCompleted
 		[Export("dragInteraction:item:willAnimateCancelWithAnimator:")]
 		[Preserve(Conditional = true)]
 		public void WillAnimateCancel(UIDragInteraction interaction, UIDragItem item, IUIDragAnimating animator)
 		{
 			Console.WriteLine("Delegate WillAnimateCancel");
-			//_platformDragStartingEventArgs?.WillAnimateCancel?.Invoke(interaction, item, animator);
+			_platformDropCompletedEventArgs?.WillAnimateCancel?.Invoke(interaction, item, animator);
 		}
 
 		void SendEventArgs<TRecognizer>(Action<TRecognizer> func, View? view)

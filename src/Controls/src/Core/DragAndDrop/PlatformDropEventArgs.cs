@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.VisualBasic;
 
 namespace Microsoft.Maui.Controls;
 
@@ -23,6 +24,10 @@ public class PlatformDropEventArgs
 	/// </summary>
 	public UIKit.IUIDropSession DropSession { get; }
 
+	internal Action<UIKit.UIDropInteraction, UIKit.IUIDropSession>? ConcludeDrop { get; private set; }
+	internal Func<UIKit.UIDropInteraction, UIKit.UIDragItem, UIKit.UITargetedDragPreview, UIKit.UITargetedDragPreview?>? PreviewForDroppingItem { get; private set; }
+	internal Action<UIKit.UIDropInteraction, UIKit.UIDragItem, UIKit.IUIDragAnimating>? WillAnimateDrop { get; private set; }
+
 	internal PlatformDropEventArgs(UIKit.UIView? sender, UIKit.UIDropInteraction dropInteraction,
 		UIKit.IUIDropSession dropSession)
 	{
@@ -30,6 +35,24 @@ public class PlatformDropEventArgs
 		Sender = sender;
 		DropInteraction = dropInteraction;
 		DropSession = dropSession;
+	}
+
+	// TODO Needs Docs
+	public void SetConcludeDrop(Action<UIKit.UIDropInteraction, UIKit.IUIDropSession>? concludeDrop)
+	{
+		ConcludeDrop = concludeDrop;
+	}
+
+	// TODO Needs Docs
+	public void SetPreviewForDroppingItem(Func<UIKit.UIDropInteraction, UIKit.UIDragItem, UIKit.UITargetedDragPreview, UIKit.UITargetedDragPreview?>? previewForDroppingItem)
+	{
+		PreviewForDroppingItem = previewForDroppingItem;
+	}
+
+	// TODO Needs Docs
+	public void SetWillAnimateDrop(Action<UIKit.UIDropInteraction, UIKit.UIDragItem, UIKit.IUIDragAnimating>? willAnimateDrop)
+	{
+		WillAnimateDrop = willAnimateDrop;
 	}
 
 #elif ANDROID
