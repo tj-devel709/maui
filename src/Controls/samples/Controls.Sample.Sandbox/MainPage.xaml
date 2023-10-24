@@ -3,4 +3,42 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="Maui.Controls.Sample.MainPage"
     xmlns:local="clr-namespace:Maui.Controls.Sample">
+
+    <Grid IgnoreSafeArea="True"
+        RowDefinitions="40,*,40,40, 40">
+            <Button Grid.Row="0" Background="blue" Text="Print CollectionView Height"
+                    Pressed="Button_Pressed"/>
+
+            <!--<CollectionView
+                x:Name="ColView"
+            Grid.Row="1"
+            BackgroundColor="AliceBlue"
+            ItemsSource="{Binding ItemSource}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Label Text="{Binding}" FontSize="50" BackgroundColor="PeachPuff"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>-->
+
+            <!--<CollectionView Background="lightblue" x:Name="ColView" Grid.Row="1"/>-->
+
+            <!--<ListView Background="lightblue" x:Name="ColView" Grid.Row="1"/>-->
+            <TableView Background="lightblue" x:Name="ColView" Grid.Row="1"/>
+
+            <!--<BoxView Grid.Row="1" Background="lightblue" x:Name="BoxView1" />-->
+
+            <Button Grid.Row="2" Background="blue" Text="Print CollectionView Height"
+                    Pressed="Button_Pressed"/>
+            <Editor
+            x:Name="myEditor"
+            Grid.Row="3"
+            BackgroundColor="MediumSeaGreen"
+            Placeholder="Send Chat"
+            PlaceholderColor="White"
+            TextColor="White"/>
+
+            <Button Grid.Row="4" Text="Fill collection"/>
+        </Grid>
+
 </ContentPage>

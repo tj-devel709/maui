@@ -14,5 +14,10 @@ namespace Maui.Controls.Sample
 		{
 			InitializeComponent();
 		}
+
+		void Button_Pressed(System.Object sender, System.EventArgs e)
+		{
+			Console.WriteLine($"StarRow Height: {ColView.Height}");
+		}
 	}
 }
