@@ -1,0 +1,13 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="Maui.Controls.Sample.FlyPage"
+    xmlns:local="clr-namespace:Maui.Controls.Sample"
+             Title="Personal Organiser">
+
+    <StackLayout>
+        <!-- Add menu items here -->
+        <Button Text="Item 1" />
+        <Button Text="Item 2" />
+        <!-- Add more menu items as needed -->
+    </StackLayout>
+</ContentPage>
