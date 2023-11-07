@@ -39,20 +39,18 @@ public static class KeyboardAutoManagerScroll
 	static NSObject? DidHideToken;
 	static NSObject? TextFieldToken;
 	static NSObject? TextViewToken;
-	static bool? ShouldConnect;
+	internal static bool ShouldDisconnectLifecycle;
 
+	/// <summary>
+	/// Enables automatic scrolling with keyboard interactions on iOS devices.
+	/// </summary>
+	/// <remarks>
+	/// This method is being called by default on iOS and will scroll the page when the keyboard
+	/// comes up. Call the method 'KeyboardAutoManagerScroll.Disconnect()'
+	/// to remove this scrolling behavior.
+	/// </remarks>
 	public static void Connect()
 	{
-		// if Disconnect was called prior to the first Connect
-		// call in the Created Lifecycle event, do not connect
-		if (ShouldConnect is false)
-		{
-			ShouldConnect = true;
-			return;
-		}
-
-		ShouldConnect = true;
-
 		if (TextFieldToken is not null)
 			return;
 
@@ -67,12 +65,17 @@ public static class KeyboardAutoManagerScroll
 		DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardDidHideNotification"), DidHideKeyboard);
 	}
 
+	/// <summary>
+	/// Disables automatic scrolling with keyboard interactions on iOS devices.
+	/// </summary>
+	/// <remarks>
+	/// When this method is called, scrolling will not automatically happen when the keyboard comes up.
+	/// </remarks>
 	public static void Disconnect()
 	{
 		// if Disconnect is called prior to Connect, signal to not
 		// Connect during the Created Lifecycle event
-		if (ShouldConnect is null)
-			ShouldConnect = false;
+		ShouldDisconnectLifecycle = true;
 
 		if (WillShowToken is not null)
 		{
@@ -121,11 +124,19 @@ public static class KeyboardAutoManagerScroll
 
 			ContainerView = View.GetContainerView();
 
+			if (ContainerView is null)
+			{
+
+			}
+
+			//Console.WriteLine("\n\nContainerView is set");
+
 			// Grab the starting position of the ContainerView so we can track if
 			// there is any external scrolling going on
 			if (ContainerView is not null)
 				StartingContainerViewFrame = ContainerView.ConvertRectToView(ContainerView.Bounds, null);
 
+			//Console.WriteLine("AdjustPositionDebounce 1 called");
 			await AdjustPositionDebounce();
 		}
 	}
@@ -162,9 +173,13 @@ public static class KeyboardAutoManagerScroll
 
 		if (!IsKeyboardShowing)
 		{
+			//Console.WriteLine("AdjustPositionDebounce 2 called");
 			await AdjustPositionDebounce();
 			IsKeyboardShowing = true;
 		}
+		//else
+		//	Console.WriteLine("!IsKeyboardShowing");
+
 	}
 
 	static void WillHideKeyboard(NSNotification notification)
@@ -304,9 +319,11 @@ public static class KeyboardAutoManagerScroll
 	// main method to calculate and animate the scrolling
 	internal static void AdjustPosition()
 	{
+		Console.WriteLine("AdjustPostion called");
 		if (ContainerView is null
 			|| (View is not UITextField && View is not UITextView))
 		{
+			//Console.WriteLine("ContainerView is null");
 			IsKeyboardAutoScrollHandling = false;
 			return;
 		}
@@ -393,13 +410,43 @@ public static class KeyboardAutoManagerScroll
 		}
 
 		else if (cursorRect.Y >= topLayoutGuide && cursorRect.Y < keyboardYPosition)
+		{
+			//if (View is UITextField t)
+			//{
+			//	Console.WriteLine($"{t.Placeholder}: No Scroll");
+
+			//}else if (View is UITextView t1)
+			//{
+			//	Console.WriteLine($"{t1.Text}: No Scroll");
+
+			//}
+			//else
+			//{
+
+			//}
+			
 			return;
+
+		}
 
 		else if (cursorRect.Y > keyboardYPosition)
 			move = cursorRect.Y - keyboardYPosition;
 
 		else if (cursorRect.Y <= topLayoutGuide)
 			move = cursorRect.Y - (nfloat)topLayoutGuide;
+
+		//if (View is UITextField f)
+		//{
+		//	Console.WriteLine($"{f.Placeholder}: Move = {move}");
+		//}
+		//else if (View is UITextView f1)
+		//{
+		//	Console.WriteLine($"{f1.Text}: Move = {move}");
+		//}
+		//else
+		//{
+
+		//}
 
 		// Find the next parent ScrollView that is scrollable
 		var superView = View.FindResponder<UIScrollView>();
@@ -619,6 +666,7 @@ public static class KeyboardAutoManagerScroll
 				rect.Y = rootViewOrigin.Y;
 
 				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => { });
+				Console.WriteLine("Animation Occuring");
 			}
 		}
 
@@ -635,7 +683,16 @@ public static class KeyboardAutoManagerScroll
 				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => { });
 			}
 		}
+
+		secondRun = !secondRun;
+		if (secondRun)
+		{
+			//await Task.Delay(2000);
+			//await AdjustPosition();
+		}
 	}
+
+	static bool secondRun;
 
 	static void AnimateInset(UIScrollView? scrollView, UIEdgeInsets movedInsets, nfloat bottomScrollIndicatorInset)
 	{
@@ -725,6 +782,7 @@ public static class KeyboardAutoManagerScroll
 
 	static void RestorePosition()
 	{
+		Console.WriteLine("RestorePosition start");
 		if (ContainerView is not null
 			&& (ContainerView.Frame.X != TopViewBeginOrigin.X || ContainerView.Frame.Y != TopViewBeginOrigin.Y)
 			&& TopViewBeginOrigin != InvalidPoint)
@@ -745,6 +803,7 @@ public static class KeyboardAutoManagerScroll
 		TopViewBeginOrigin = InvalidPoint;
 		CursorRect = null;
 		StartingContainerViewFrame = null;
+		Console.WriteLine("RestorePosition finished");
 	}
 
 	static NSIndexPath? GetPreviousIndexPath(this UIScrollView scrollView, NSIndexPath indexPath)

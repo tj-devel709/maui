@@ -36,10 +36,11 @@ namespace Microsoft.Maui.Platform
 			{
 				return bounds;
 			}
+			return bounds;
 
-#pragma warning disable CA1416 // TODO 'UIView.SafeAreaInsets' is only supported on: 'ios' 11.0 and later, 'maccatalyst' 11.0 and later, 'tvos' 11.0 and later.
-			return SafeAreaInsets.InsetRect(bounds);
-#pragma warning restore CA1416
+//#pragma warning disable CA1416 // TODO 'UIView.SafeAreaInsets' is only supported on: 'ios' 11.0 and later, 'maccatalyst' 11.0 and later, 'tvos' 11.0 and later.
+//			return SafeAreaInsets.InsetRect(bounds);
+//#pragma warning restore CA1416
 		}
 
 		protected bool IsMeasureValid(double widthConstraint, double heightConstraint)
@@ -115,6 +116,7 @@ namespace Microsoft.Maui.Platform
 			}
 
 			var bounds = AdjustForSafeArea(Bounds).ToRectangle();
+			Console.WriteLine($"Bounds: {Bounds}");
 
 			var widthConstraint = bounds.Width;
 			var heightConstraint = bounds.Height;

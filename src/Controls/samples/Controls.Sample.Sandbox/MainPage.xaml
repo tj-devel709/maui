@@ -2,5 +2,41 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="Maui.Controls.Sample.MainPage"
-    xmlns:local="clr-namespace:Maui.Controls.Sample">
+    xmlns:local="clr-namespace:Maui.Controls.Sample"
+    xmlns:ios="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;assembly=Microsoft.Maui.Controls"
+    ios:Page.UseSafeArea="False"
+    x:Name="ContentP">
+
+    <!--<Grid RowDefinitions="*, Auto">
+        <VerticalStackLayout Grid.Row="1">
+            <Entry HeightRequest="300" Placeholder="Entry 1"/>
+            <Entry Placeholder="Entry 2"/>
+            <Entry Placeholder="Entry 3"/>
+            <Entry Placeholder="Entry 4"/>
+            <Entry Placeholder="Entry 5"/>
+            <Entry Placeholder="Entry 6"/>
+            <Entry Placeholder="Entry 7"/>
+        </VerticalStackLayout>
+    </Grid>-->
+
+    <Grid 
+RowDefinitions="40,*,40,40,40, 40">
+        <Button Grid.Row="0" Background="blue" Text="Print CollectionView Height"
+Pressed="Button_Pressed"/>
+        <TableView Background="lightblue" x:Name="ColView" Grid.Row="1"/>
+
+        <Button Grid.Row="2" Background="blue" Text="Print CollectionView Height"
+Pressed="Button_Pressed"/>
+
+        <Entry Background="lightgray" Placeholder="Entry" Grid.Row="3" />
+        <Editor
+x:Name="myEditor"
+Grid.Row="4"
+BackgroundColor="MediumSeaGreen"
+Placeholder="Send Chat"
+PlaceholderColor="White"
+TextColor="White"/>
+
+        <Button Grid.Row="5" Text="Fill collection"/>
+    </Grid>
 </ContentPage>
