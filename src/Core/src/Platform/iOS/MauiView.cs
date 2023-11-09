@@ -10,6 +10,7 @@ namespace Microsoft.Maui.Platform
 	public abstract class MauiView : UIView, ICrossPlatformLayoutBacking, IVisualTreeElementProvidable, IUIViewLifeCycleEvents
 	{
 		static bool? _respondsToSafeArea;
+		static bool _isTopLevelGrid;
 
 		double _lastMeasureHeight = double.NaN;
 		double _lastMeasureWidth = double.NaN;
@@ -28,17 +29,14 @@ namespace Microsoft.Maui.Platform
 			if (_respondsToSafeArea.HasValue)
 				return _respondsToSafeArea.Value;
 			return (bool)(_respondsToSafeArea = RespondsToSelector(new Selector("safeAreaInsets")));
-		}
-
-		// TODO probably not a good place for this
-		static bool IsTopLevelGrid;
+		}		
 
 		protected CGRect AdjustForSafeArea(CGRect bounds)
 		{
 			// if we have a top level grid with a row of star height,
 			// expand the row to not consider safe area so it doesn't resize
 			// when the keyboard scrolls
-			if (View is IGridLayout && IsTopLevelGrid)
+			if (View is IGridLayout && _isTopLevelGrid)
 			{
 				Console.WriteLine($"Grid: {View} - Grid bounds");
 				return bounds;
@@ -50,7 +48,7 @@ namespace Microsoft.Maui.Platform
 				foreach (var row in gridLayout.RowDefinitions)
 				{
 					if (row.Height.GridUnitType == GridUnitType.Star)
-						IsTopLevelGrid = true;
+						_isTopLevelGrid = true;
 				}
 			}
 
