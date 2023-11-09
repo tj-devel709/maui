@@ -30,14 +30,38 @@ namespace Microsoft.Maui.Platform
 			return (bool)(_respondsToSafeArea = RespondsToSelector(new Selector("safeAreaInsets")));
 		}
 
+		// TODO probably not a good place for this
+		static bool IsTopLevelGrid;
+
 		protected CGRect AdjustForSafeArea(CGRect bounds)
 		{
+			// if we have a top level grid with a row of star height,
+			// expand the row to not consider safe area so it doesn't resize
+			// when the keyboard scrolls
+			if (View is IGridLayout && IsTopLevelGrid)
+			{
+				Console.WriteLine($"Grid: {View} - Grid bounds");
+				return bounds;
+			}
+
+			// check the ContentPage to see if a grid with star sized row is top level
+			if (View is IContentView contentView && contentView.Content is IGridLayout gridLayout)
+			{
+				foreach (var row in gridLayout.RowDefinitions)
+				{
+					if (row.Height.GridUnitType == GridUnitType.Star)
+						IsTopLevelGrid = true;
+				}
+			}
+
 			if (View is not ISafeAreaView sav || sav.IgnoreSafeArea || !RespondsToSafeArea())
 			{
+				Console.WriteLine($"View: {View} - bounds");
 				return bounds;
 			}
 
 #pragma warning disable CA1416 // TODO 'UIView.SafeAreaInsets' is only supported on: 'ios' 11.0 and later, 'maccatalyst' 11.0 and later, 'tvos' 11.0 and later.
+			Console.WriteLine($"View: {View} - safeArea");
 			return SafeAreaInsets.InsetRect(bounds);
 #pragma warning restore CA1416
 		}
