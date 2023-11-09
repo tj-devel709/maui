@@ -35,7 +35,7 @@ namespace Microsoft.Maui.Platform
 		{
 			// if we have a top level grid with a row of star height,
 			// expand the row to not consider safe area so it doesn't resize
-			// when the keyboard scrolls
+			// when the keyboard scrolls - https://github.com/dotnet/maui/issues/18354
 			if (View is IGridLayout && _isTopLevelGrid)
 			{
 				Console.WriteLine($"Grid: {View} - Grid bounds");
@@ -48,7 +48,10 @@ namespace Microsoft.Maui.Platform
 				foreach (var row in gridLayout.RowDefinitions)
 				{
 					if (row.Height.GridUnitType == GridUnitType.Star)
+					{
 						_isTopLevelGrid = true;
+						break;
+					}
 				}
 			}
 
