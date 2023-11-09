@@ -29,7 +29,7 @@ namespace Microsoft.Maui.Platform
 			if (_respondsToSafeArea.HasValue)
 				return _respondsToSafeArea.Value;
 			return (bool)(_respondsToSafeArea = RespondsToSelector(new Selector("safeAreaInsets")));
-		}		
+		}
 
 		protected CGRect AdjustForSafeArea(CGRect bounds)
 		{
