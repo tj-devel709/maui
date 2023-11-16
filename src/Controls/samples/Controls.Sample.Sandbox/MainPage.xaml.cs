@@ -13,6 +13,13 @@ namespace Maui.Controls.Sample
 		public MainPage()
 		{
 			InitializeComponent();
+
 		}
+		void Button_Pressed(System.Object sender, System.EventArgs e)
+		{
+			Console.WriteLine($"\nStarRow Height: {ColView.Height}");
+			Console.WriteLine($"ContentPage Height: {ContP.Height}\n");
+		}
+
 	}
 }

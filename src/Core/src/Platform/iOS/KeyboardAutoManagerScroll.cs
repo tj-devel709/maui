@@ -39,6 +39,7 @@ public static class KeyboardAutoManagerScroll
 	static NSObject? TextFieldToken;
 	static NSObject? TextViewToken;
 	internal static bool ShouldDisconnectLifecycle;
+	internal static bool ShouldIgnoreSafeAreaAdjustment;
 
 	/// <summary>
 	/// Enables automatic scrolling with keyboard interactions on iOS devices.
@@ -195,6 +196,7 @@ public static class KeyboardAutoManagerScroll
 	static void DidHideKeyboard(NSNotification notification)
 	{
 		IsKeyboardAutoScrollHandling = false;
+		ShouldIgnoreSafeAreaAdjustment = false;
 	}
 
 	static NSObject? FindValue(this NSDictionary dict, string key)
@@ -276,10 +278,15 @@ public static class KeyboardAutoManagerScroll
 
 		var entranceCount = DebounceCount;
 
+		//await Task.Delay(10);
 		await Task.Delay(10);
 
 		if (entranceCount == DebounceCount)
+		{
 			AdjustPosition();
+			//await Task.Delay(2000);
+			//AdjustPosition();
+		}
 	}
 
 	// main method to calculate and animate the scrolling
@@ -547,6 +554,7 @@ public static class KeyboardAutoManagerScroll
 
 			if (ContainerView.Frame.X != rootViewOrigin.X || ContainerView.Frame.Y != rootViewOrigin.Y)
 			{
+				ShouldIgnoreSafeAreaAdjustment = true;
 				var rect = ContainerView.Frame;
 				rect.X = rootViewOrigin.X;
 				rect.Y = rootViewOrigin.Y;
@@ -648,6 +656,7 @@ public static class KeyboardAutoManagerScroll
 		ContainerView = null;
 		TopViewBeginOrigin = InvalidPoint;
 		CursorRect = null;
+		ShouldIgnoreSafeAreaAdjustment = false;
 	}
 
 	static NSIndexPath? GetPreviousIndexPath(this UIScrollView scrollView, NSIndexPath indexPath)

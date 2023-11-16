@@ -30,7 +30,6 @@ namespace Microsoft.Maui.Platform
 				application?.UpdateUserInterfaceStyle();
 				application?.ThemeChanged();
 			}
-
 #pragma warning disable CA1422 // Validate platform compatibility
 			base.TraitCollectionDidChange(previousTraitCollection);
 #pragma warning restore CA1422 // Validate platform compatibility
