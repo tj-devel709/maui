@@ -165,11 +165,28 @@ public static class KeyboardAutoManagerScroll
 			userInfo.SetAnimationDuration();
 		}
 
+		
+
 		if (!IsKeyboardShowing)
 		{
 			await AdjustPositionDebounce();
 			IsKeyboardShowing = true;
+
+			
+			// UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, 
+			// 	() => ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height), () => { });
+		
 		}
+
+		// var c = ContainerView as UIResponder;
+		// var c1 = c as UIViewController;
+		// var c2 = ContainerView?.FindResponder<UIViewController>();
+
+		
+
+	// 	[UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionBeginFromCurrentState | curve animations:^{
+    //     self.contentView.frame = CGRectMake(0, 0, keyboardFrameEnd.size.width, keyboardFrameEnd.origin.y);
+    // } completion:nil];
 	}
 
 	static void WillHideKeyboard(NSNotification notification)
@@ -179,8 +196,15 @@ public static class KeyboardAutoManagerScroll
 		if (LastScrollView is not null)
 			UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, AnimateHidingKeyboard, () => { });
 
+		if (ContainerView is not null){
+			UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, 
+				() => ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height + KeyboardFrame.Height), () => { });
+		}
+
 		if (IsKeyboardShowing)
 			RestorePosition();
+
+		
 
 		IsKeyboardShowing = false;
 		View = null;
@@ -554,7 +578,8 @@ public static class KeyboardAutoManagerScroll
 									superScrollView.SetContentOffset(newContentOffset, UIView.AnimationsEnabled);
 								else
 									superScrollView.ContentOffset = newContentOffset;
-							}, () => { });
+							}, () => { if (ContainerView is not null){
+				ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);}});
 
 							// after this scroll finishes, there is an edge case where if we have Large Titles,
 							// the entire requeseted scroll amount may not be allowed. If so, we need to scroll again.
@@ -620,7 +645,8 @@ public static class KeyboardAutoManagerScroll
 				rect.X = rootViewOrigin.X;
 				rect.Y = rootViewOrigin.Y;
 
-				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => { });
+				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => { if (ContainerView is not null){
+				ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);}});
 			}
 		}
 
@@ -634,7 +660,8 @@ public static class KeyboardAutoManagerScroll
 				rect.X = rootViewOrigin.X;
 				rect.Y = rootViewOrigin.Y;
 
-				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => { });
+				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => {if (ContainerView is not null){
+				ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);} });
 			}
 		}
 	}
