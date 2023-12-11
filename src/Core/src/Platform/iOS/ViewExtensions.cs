@@ -344,7 +344,7 @@ namespace Microsoft.Maui.Platform
 			return Array.IndexOf(platformView.Subviews, subview);
 		}
 
-		internal static int[]? IndexesOfSubview (this UIView topView, UIView subview){
+		internal static int[]? IndicesOfSubview (this UIView topView, UIView subview){
 			var indexes = new List<int>();
 			
 			if (topView.Subviews.Length == 0)

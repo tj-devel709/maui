@@ -70,7 +70,7 @@ public static class KeyboardAutoManagerScroll
 		TextViewToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UITextViewTextDidBeginEditingNotification"), DidUITextBeginEditing);
 
 		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillShowNotification"), WillKeyboardShow);
-
+		
 		WillHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillHideNotification"), WillHideKeyboard);
 
 		DidHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardDidHideNotification"), DidHideKeyboard);
@@ -180,9 +180,25 @@ public static class KeyboardAutoManagerScroll
 			IsKeyboardShowing = true;
 		}
 
+		UIView.Animate(
+			duration: AnimationDuration,
+			delay: 0,
+			options: UIViewAnimationOptions.CurveEaseOut,
+			animation: () =>
+			{
+				AnimateContentResize();
+			},
+			completion: () =>
+			{
+			}
+		);
+	}
+
+	static void AnimateContentResize()
+	{
 		if (ShouldResizeContent && ContainerView?.Subviews?[0] is MauiView mauiView)
 		{
-			var viewIndexPath = mauiView.IndexesOfSubview(View!);
+			var viewIndexPath = mauiView.IndicesOfSubview(View!);
 			Console.WriteLine(viewIndexPath);
 
 			var child = mauiView.Subviews[0];
@@ -195,7 +211,7 @@ public static class KeyboardAutoManagerScroll
 			}
  
 			// the child is another layout that does not inherit from UIScrollView
-			else if (child is not null  && ResizedState == ContentResizeSizeState.None)
+			else if (child is not null && ResizedState == ContentResizeSizeState.None)
 			{
 				// Set up the new UIScrollView
 				var tempScrollView = new UIScrollView();
@@ -204,17 +220,22 @@ public static class KeyboardAutoManagerScroll
 				tempScrollView.ScrollEnabled = true;
 				tempScrollView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);
 
+				var originalSubviews = mauiView.Subviews;
+				var numberOfOriginalSubviews = originalSubviews.Length;
+
 				// Exchange the contents of the ContainerView with the new UIScrollView
-				tempScrollView.AddSubviews(mauiView.Subviews);
-				mauiView.ClearSubviews();
+				tempScrollView.AddSubviews(originalSubviews);
+
 				mauiView.AddSubview(tempScrollView);
 
 				// Find the view that was focused and assign the FirstResponder to it
 				foreach (var view in tempScrollView.Subviews)
 				{
+					if (view is not MauiView)
+						continue;
+
 					var currentView = view;
 
-					// go through and assign the FirstResponder to the correct view
 					foreach (var index in viewIndexPath!){
 						if (currentView.Subviews[index] is UIView subview)
 							currentView = subview;
@@ -235,6 +256,13 @@ public static class KeyboardAutoManagerScroll
 		}
 	}
 
+	static void DidKeyboardShow(NSNotification notification)
+	{
+
+
+		
+	}
+
 	static void WillHideKeyboard(NSNotification notification)
 	{
 		notification.UserInfo?.SetAnimationDuration();
@@ -247,10 +275,34 @@ public static class KeyboardAutoManagerScroll
 		// 		() => ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height + KeyboardFrame.Height), () => { });
 		// }
 
+		
+
+
+
+		if (ShouldResizeContent && ResizedState != ContentResizeSizeState.None && ContainerView?.Subviews?[0] is MauiView mauiView)
+		{
+			var child = mauiView.Subviews[0];
+
+			if (ResizedState == ContentResizeSizeState.Resized)
+			{
+				ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height + KeyboardFrame.Height);
+				ResizedState = ContentResizeSizeState.None;
+			}
+ 
+			else if (ResizedState == ContentResizeSizeState.ResizedWithScrollView)
+			{
+				// Remove the UIScrollView and replace it with the original layout
+				var orginalLayout = child.Subviews;
+
+				// mauiView.ClearSubviews();
+				mauiView.AddSubviews(orginalLayout);
+				ResizedState = ContentResizeSizeState.None;
+			}
+		}
+
+
 		if (IsKeyboardShowing)
 			RestorePosition();
-
-		
 
 		IsKeyboardShowing = false;
 		View = null;
