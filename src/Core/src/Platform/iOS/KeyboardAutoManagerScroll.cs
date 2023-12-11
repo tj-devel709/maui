@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +43,14 @@ public static class KeyboardAutoManagerScroll
 	internal static bool ShouldDisconnectLifecycle;
 	internal static bool ShouldIgnoreSafeAreaAdjustment;
 	internal static bool ShouldScrollAgain;
+	internal static ContentResizeSizeState ResizedState;
+	internal static bool ShouldResizeContent = true;
+
+	internal enum ContentResizeSizeState {
+		None,
+		Resized,
+		ResizedWithScrollView,
+	}
 
 	/// <summary>
 	/// Enables automatic scrolling with keyboard interactions on iOS devices.
@@ -165,28 +174,65 @@ public static class KeyboardAutoManagerScroll
 			userInfo.SetAnimationDuration();
 		}
 
-		
-
 		if (!IsKeyboardShowing)
 		{
 			await AdjustPositionDebounce();
 			IsKeyboardShowing = true;
-
-			
-			// UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, 
-			// 	() => ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height), () => { });
-		
 		}
 
-		// var c = ContainerView as UIResponder;
-		// var c1 = c as UIViewController;
-		// var c2 = ContainerView?.FindResponder<UIViewController>();
+		if (ShouldResizeContent && ContainerView?.Subviews?[0] is MauiView mauiView)
+		{
+			var viewIndexPath = mauiView.IndexesOfSubview(View!);
+			Console.WriteLine(viewIndexPath);
 
-		
+			var child = mauiView.Subviews[0];
 
-	// 	[UIView animateWithDuration:duration delay:0 options:UIViewAnimationOptionBeginFromCurrentState | curve animations:^{
-    //     self.contentView.frame = CGRectMake(0, 0, keyboardFrameEnd.size.width, keyboardFrameEnd.origin.y);
-    // } completion:nil];
+			// the child is a UIScrollView
+			if (child is UIScrollView scrollView && ResizedState == ContentResizeSizeState.None)
+			{
+				ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);
+				ResizedState = ContentResizeSizeState.Resized;
+			}
+ 
+			// the child is another layout that does not inherit from UIScrollView
+			else if (child is not null  && ResizedState == ContentResizeSizeState.None)
+			{
+				// Set up the new UIScrollView
+				var tempScrollView = new UIScrollView();
+				tempScrollView.ContentSize = new CoreGraphics.CGSize(child.Frame.Width, child.Frame.Height);
+				tempScrollView.LayoutMargins = new UIEdgeInsets(0, 0, 0, 0);
+				tempScrollView.ScrollEnabled = true;
+				tempScrollView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);
+
+				// Exchange the contents of the ContainerView with the new UIScrollView
+				tempScrollView.AddSubviews(mauiView.Subviews);
+				mauiView.ClearSubviews();
+				mauiView.AddSubview(tempScrollView);
+
+				// Find the view that was focused and assign the FirstResponder to it
+				foreach (var view in tempScrollView.Subviews)
+				{
+					var currentView = view;
+
+					// go through and assign the FirstResponder to the correct view
+					foreach (var index in viewIndexPath!){
+						if (currentView.Subviews[index] is UIView subview)
+							currentView = subview;
+
+						else 
+							break;
+					}
+
+					if (currentView is UIView foundView)
+					{
+						foundView.BecomeFirstResponder();
+						break;
+					}
+				}
+
+				ResizedState = ContentResizeSizeState.ResizedWithScrollView;
+			}
+		}
 	}
 
 	static void WillHideKeyboard(NSNotification notification)
@@ -196,10 +242,10 @@ public static class KeyboardAutoManagerScroll
 		if (LastScrollView is not null)
 			UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, AnimateHidingKeyboard, () => { });
 
-		if (ContainerView is not null){
-			UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, 
-				() => ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height + KeyboardFrame.Height), () => { });
-		}
+		// if (ContainerView is not null){
+		// 	UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, 
+		// 		() => ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height + KeyboardFrame.Height), () => { });
+		// }
 
 		if (IsKeyboardShowing)
 			RestorePosition();
@@ -342,6 +388,10 @@ public static class KeyboardAutoManagerScroll
 	// main method to calculate and animate the scrolling
 	internal static void AdjustPosition()
 	{
+// 		if (true)
+// 			return;
+// #pragma warning disable CS0162 // Unreachable code detected
+
 		if (ContainerView is null
 			|| (View is not UITextField && View is not UITextView))
 		{
@@ -578,8 +628,7 @@ public static class KeyboardAutoManagerScroll
 									superScrollView.SetContentOffset(newContentOffset, UIView.AnimationsEnabled);
 								else
 									superScrollView.ContentOffset = newContentOffset;
-							}, () => { if (ContainerView is not null){
-				ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);}});
+							}, () => { });
 
 							// after this scroll finishes, there is an edge case where if we have Large Titles,
 							// the entire requeseted scroll amount may not be allowed. If so, we need to scroll again.
@@ -645,8 +694,7 @@ public static class KeyboardAutoManagerScroll
 				rect.X = rootViewOrigin.X;
 				rect.Y = rootViewOrigin.Y;
 
-				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => { if (ContainerView is not null){
-				ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);}});
+				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => { });
 			}
 		}
 
@@ -660,8 +708,7 @@ public static class KeyboardAutoManagerScroll
 				rect.X = rootViewOrigin.X;
 				rect.Y = rootViewOrigin.Y;
 
-				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => {if (ContainerView is not null){
-				ContainerView.Frame = new CGRect(0, 0, ContainerView.Frame.Width, ContainerView.Frame.Height - KeyboardFrame.Height);} });
+				UIView.Animate(AnimationDuration, 0, UIViewAnimationOptions.CurveEaseOut, () => AnimateRootView(rect), () => {});
 			}
 		}
 	}

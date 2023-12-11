@@ -344,6 +344,27 @@ namespace Microsoft.Maui.Platform
 			return Array.IndexOf(platformView.Subviews, subview);
 		}
 
+		internal static int[]? IndexesOfSubview (this UIView topView, UIView subview){
+			var indexes = new List<int>();
+			
+			if (topView.Subviews.Length == 0)
+				return null;
+
+			var superView = subview.Superview as UIView;
+
+			while (superView is UIView)
+			{
+				if (superView == topView)
+					return  indexes.ToArray();
+
+				indexes.Add (superView.IndexOfSubview(subview));
+				subview = superView;
+				superView = superView.Superview;
+			}
+			
+			return null;
+		}
+
 		public static UIImage? ConvertToImage(this UIView view)
 		{
 			var imageRenderer = new UIGraphicsImageRenderer(view.Bounds.Size);
