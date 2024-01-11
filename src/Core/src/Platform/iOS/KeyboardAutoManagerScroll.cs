@@ -35,6 +35,7 @@ public static class KeyboardAutoManagerScroll
 	static int TextViewTopDistance = 20;
 	static int DebounceCount;
 	static NSObject? WillShowToken;
+	static NSObject? DidShowToken;
 	static NSObject? WillHideToken;
 	static NSObject? DidHideToken;
 	static NSObject? TextFieldToken;
@@ -42,6 +43,7 @@ public static class KeyboardAutoManagerScroll
 	internal static bool ShouldDisconnectLifecycle;
 	internal static bool ShouldIgnoreSafeAreaAdjustment;
 	internal static bool ShouldScrollAgain;
+	static bool KeyboardIsRising;
 
 	/// <summary>
 	/// Enables automatic scrolling with keyboard interactions on iOS devices.
@@ -61,6 +63,8 @@ public static class KeyboardAutoManagerScroll
 		TextViewToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UITextViewTextDidBeginEditingNotification"), DidUITextBeginEditing);
 
 		WillShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillShowNotification"), WillKeyboardShow);
+		
+		DidShowToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardDidShowNotification"), DidKeyboardShow);
 
 		WillHideToken = NSNotificationCenter.DefaultCenter.AddObserver(new NSString("UIKeyboardWillHideNotification"), WillHideKeyboard);
 
@@ -153,6 +157,7 @@ public static class KeyboardAutoManagerScroll
 
 	static async void WillKeyboardShow(NSNotification notification)
 	{
+		KeyboardIsRising = true;
 		var userInfo = notification.UserInfo;
 
 		if (userInfo is not null)
@@ -170,6 +175,11 @@ public static class KeyboardAutoManagerScroll
 			await AdjustPositionDebounce();
 			IsKeyboardShowing = true;
 		}
+	}
+
+	static void DidKeyboardShow(NSNotification notification)
+	{
+		KeyboardIsRising = false;
 	}
 
 	static void WillHideKeyboard(NSNotification notification)
@@ -291,17 +301,16 @@ public static class KeyboardAutoManagerScroll
 		// to the delay so that the translation on the y-axis of the viewcontroller can
 		// occur prior to our calculations for scrolling.
 		var vc = View?.FindResponder<UIViewController>();
-		if (vc?.ActivePresentationController?.PresentationStyle == UIModalPresentationStyle.Popover)
+		if (vc?.ActivePresentationController?.PresentationStyle == UIModalPresentationStyle.Popover && !IsKeyboardShowing)
 		{
-			await Task.Delay(30);
+			// TODO - new situation where the keyboard does not come up until after all of this and container does not move until after. 
+			// maybe can have some flag that is set when KeyboardWillShow but has not shown yet? 
+			// This way it will wait for the keyboard to finish coming up, but will not stall if the keyboard will not programatically come up?
 
-			var currentContainerViewFrame = ContainerView?.ConvertRectToView(ContainerView.Bounds, null);
-			while (currentContainerViewFrame != StartingContainerViewFrame)
-			{
-				StartingContainerViewFrame = currentContainerViewFrame;
-				await Task.Delay(5);
-				currentContainerViewFrame = ContainerView?.ConvertRectToView(ContainerView.Bounds, null);
-			}
+			var OContainerViewFrame = ContainerView?.ConvertRectToView(ContainerView.Bounds, null);
+			await WaitForContainerviewScrolling();
+
+			ShouldScrollAgain = true;
 		}
 
 		if (entranceCount == DebounceCount)
@@ -311,7 +320,31 @@ public static class KeyboardAutoManagerScroll
 			// See if the layout requests to scroll again after our initial scroll
 			await Task.Delay(5);
 			if (ShouldScrollAgain)
+			{
+				var didWaitForKeyboard = false;
+				while (KeyboardIsRising)
+				{
+					await Task.Delay(5);
+					didWaitForKeyboard = true;
+				}
+
+				if (didWaitForKeyboard)
+					await WaitForContainerviewScrolling();
+				
 				AdjustPosition();
+			}
+		}
+	}
+
+	static async Task WaitForContainerviewScrolling (){
+		await Task.Delay(30);
+
+		var currentContainerViewFrame = ContainerView?.ConvertRectToView(ContainerView.Bounds, null);
+		while (currentContainerViewFrame != StartingContainerViewFrame)
+		{
+			StartingContainerViewFrame = currentContainerViewFrame;
+			await Task.Delay(5);
+			currentContainerViewFrame = ContainerView?.ConvertRectToView(ContainerView.Bounds, null);
 		}
 	}
 
@@ -414,6 +447,11 @@ public static class KeyboardAutoManagerScroll
 
 		else if (cursorRect.Y <= topLayoutGuide)
 			move = cursorRect.Y - (nfloat)topLayoutGuide;
+
+		// case for when the cursor is lower than the bottom of the containerview but still higher than the keyboard
+		else if (cursorRect.Y > ContainerView.Frame.GetMaxY())
+			move = cursorRect.GetMaxY() - ContainerView.ConvertRectToView(ContainerView.Bounds, null).GetMaxY();
+			// move = 50;
 
 		// Find the next parent ScrollView that is scrollable
 		var superView = View.FindResponder<UIScrollView>();

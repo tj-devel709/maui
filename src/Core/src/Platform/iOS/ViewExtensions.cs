@@ -740,7 +740,8 @@ namespace Microsoft.Maui.Platform
 				layer.CornerRadius = stroke.CornerRadius;
 		}
 
-		internal static T? FindResponder<T>(this UIView view) where T : UIResponder
+#pragma warning disable RS0016 // Add public types and members to the declared API
+		public static T? FindResponder<T>(this UIView view) where T : UIResponder
 		{
 			var nextResponder = view as UIResponder;
 			while (nextResponder is not null)
@@ -881,7 +882,18 @@ namespace Microsoft.Maui.Platform
 			if (rootView is not null)
 				return rootView;
 
+			// var popoverController = startingPoint?.FindResponder<UIPopoverPresentationController>();
+
+			// if (popoverController?.PresentedView is not null)
+			// 	return popoverController.PresentedView;
+
 			var firstViewController = startingPoint?.FindTopController<UIViewController>();
+
+			var p = firstViewController?.ViewIfLoaded;
+			var r = p?.Subviews;
+
+			if (firstViewController?.PresentedViewController is not null)
+				return firstViewController.PresentedViewController.View;
 
 			if (firstViewController?.ViewIfLoaded is not null)
 				return firstViewController.ViewIfLoaded.FindDescendantView<ContentView>();

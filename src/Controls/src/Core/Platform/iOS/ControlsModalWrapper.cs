@@ -40,6 +40,8 @@ namespace Microsoft.Maui.Controls.Platform
 				ModalPresentationStyle = result;
 			}
 
+			ModalPresentationStyle = UIKit.UIModalPresentationStyle.Popover;
+
 			UpdateBackgroundColor();
 			_ = modal?.ViewController?.View ?? throw new InvalidOperationException("View Controller Not Initialized on Modal Page");
 
@@ -57,7 +59,51 @@ namespace Microsoft.Maui.Controls.Platform
 
 			if (modal.VirtualView is Page page)
 				page.PropertyChanged += OnModalPagePropertyChanged;
+
+			if (ModalPresentationStyle == UIKit.UIModalPresentationStyle.Popover)
+			{
+				var popoverPresentationController = this.PopoverPresentationController;
+
+				var child = modal.ViewController.View;
+				while (child is not UIButton && child?.Subviews?.Length > 0){
+					child = child.Subviews[0];
+				}
+
+				if (popoverPresentationController != null && child != null)
+				{
+					popoverPresentationController.Delegate = new PopoverDelegate();
+
+					popoverPresentationController.SourceView = child;
+					popoverPresentationController.SourceRect = child.Bounds;
+					// popoverPresentationController.SourceRect = new CoreGraphics.CGRect(100, 100, 100, 100);
+					popoverPresentationController.BackgroundColor = UIColor.Green;
+					// Allow the popover to have an arrow in any direction
+					popoverPresentationController.PermittedArrowDirections = UIPopoverArrowDirection.Up;
+
+					// Don't allow any other views to be interacted with while the popover is visible
+					// popoverPresentationController.PassthroughViews = null;
+				}
+			}
 		}
+
+		sealed class PopoverDelegate : UIPopoverPresentationControllerDelegate
+		{
+			public override UIKit.UIModalPresentationStyle GetAdaptivePresentationStyle(UIPresentationController forPresentationController)
+			{
+				return UIKit.UIModalPresentationStyle.None;
+			}
+			readonly WeakEventManager popoverDismissedEventManager = new();
+ 
+			public event EventHandler<UIPresentationController> PopoverDismissedEvent
+			{
+				add => popoverDismissedEventManager.AddEventHandler(value);
+				remove => popoverDismissedEventManager.RemoveEventHandler(value);
+			}
+			public override void DidDismiss(UIPresentationController presentationController) {
+				popoverDismissedEventManager.HandleEvent(this, presentationController, nameof(PopoverDismissedEvent));
+			}
+		}
+		
 
 		[Export("presentationControllerDidDismiss:")]
 		[Microsoft.Maui.Controls.Internals.Preserve(Conditional = true)]
@@ -196,7 +242,8 @@ namespace Microsoft.Maui.Controls.Platform
 			}
 			else
 			{
-				View!.BackgroundColor = UIColor.Clear;
+				// View!.BackgroundColor = UIColor.Clear;
+				View!.BackgroundColor = UIColor.Blue;
 			}
 		}
 	}
