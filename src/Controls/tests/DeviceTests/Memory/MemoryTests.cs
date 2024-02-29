@@ -122,6 +122,10 @@ public class MemoryTests : ControlsHandlerTestBase
 				webView.Source = new HtmlWebViewSource { Html = "<p>hi</p>" };
 				await Task.Delay(1000);
 			}
+			else if (view is Border border)
+			{
+				border.StrokeShape = new Ellipse();
+			}
 			var handler = CreateHandler<LayoutHandler>(layout);
 			viewReference = new WeakReference(view);
 			handlerReference = new WeakReference(view.Handler);
