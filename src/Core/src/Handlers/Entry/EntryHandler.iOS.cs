@@ -154,6 +154,8 @@ namespace Microsoft.Maui.Handlers
 
 			public bool OnShouldReturn(UITextField view)
 			{
+				var isFirstResponder = view.IsFirstResponder;
+
 				KeyboardAutoManager.GoToNextResponderOrResign(view);
 
 				VirtualView?.Completed();
@@ -165,6 +167,9 @@ namespace Microsoft.Maui.Handlers
 			{
 				if (sender is MauiTextField platformView && VirtualView is IEntry virtualView)
 				{
+					var isFirstResponder = platformView.IsFirstResponder;
+					var commands = platformView.KeyCommands;
+
 					platformView.UpdateSelectionLength(virtualView);
 					virtualView.IsFocused = true;
 				}
@@ -174,6 +179,8 @@ namespace Microsoft.Maui.Handlers
 			{
 				if (sender is MauiTextField platformView)
 				{
+					var isFirstResponder = platformView.IsFirstResponder;
+
 					VirtualView?.UpdateText(platformView.Text);
 				}
 			}
@@ -182,6 +189,8 @@ namespace Microsoft.Maui.Handlers
 			{
 				if (sender is MauiTextField platformView && VirtualView is IEntry virtualView)
 				{
+					var isFirstResponder = platformView.IsFirstResponder;
+
 					virtualView.UpdateText(platformView.Text);
 					virtualView.IsFocused = false;
 				}

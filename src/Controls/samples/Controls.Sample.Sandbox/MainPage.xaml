@@ -4,4 +4,13 @@
     x:Class="Maui.Controls.Sample.MainPage"
     xmlns:local="clr-namespace:Maui.Controls.Sample">
 
+    <VerticalStackLayout>
+        <Entry Text="Entry1"  ReturnType="Next" AutomationId="One"/>
+        <Entry Text="Entry2"  AutomationId="Two"/>
+        <Button Text="Button1" AutomationId="Three" Background="Blue"/>
+        <Editor Text="Editor1" AutomationId="Four"/>
+        <Entry Text="Entry3"/>
+
+    </VerticalStackLayout>
+
 </ContentPage>
